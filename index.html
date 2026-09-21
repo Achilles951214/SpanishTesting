@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F5F0">
+<title>Conjuga — Spanish Verb Practice</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <h1>Conjuga</h1>
+    <div class="mode-toggle" role="group" aria-label="Difficulty mode">
+      <button id="mode-simple" class="mode-btn" aria-pressed="true">Simple</button>
+      <button id="mode-complex" class="mode-btn" aria-pressed="false">Complex</button>
+    </div>
+  </header>
+
+  <div class="meta-row">
+    <span id="tag" class="tag"></span>
+    <div id="dots" class="dots" aria-hidden="true"></div>
+  </div>
+
+  <main class="card">
+    <div class="card-row">
+      <span class="label">English</span>
+      <span id="timer" class="timer">0.0s</span>
+    </div>
+    <p id="english-text" class="sentence"></p>
+
+    <div class="divider"></div>
+
+    <div id="spanish-block" class="hidden">
+      <span class="label">Español</span>
+      <p id="spanish-text" class="sentence spanish"></p>
+    </div>
+    <p id="hint-text" class="hint">Tap "Show Spanish" when ready.</p>
+  </main>
+
+  <button id="action-btn" class="primary-btn">Show Spanish</button>
+
+  <div id="prompt-overlay" class="overlay hidden">
+    <div class="prompt-card">
+      <div class="prompt-title">Nice work — 5 done!</div>
+      <p class="prompt-body">Keep drilling this verb, or start a fresh one?</p>
+      <button id="prompt-continue" class="primary-btn">Keep going, same verb</button>
+      <button id="prompt-fresh" class="secondary-btn">Fresh verb</button>
+    </div>
+  </div>
+
+</div>
+<script type="module" src="js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
