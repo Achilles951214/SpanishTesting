@@ -134,6 +134,66 @@ const IRREGULAR = {
     conditional: ['vería', 'verías', 'vería', 'veríamos', 'verían'],
     subjunctive: ['vea', 'veas', 'vea', 'veamos', 'vean'],
   },
+  dar: {
+    present: ['doy', 'das', 'da', 'damos', 'dan'],
+    preterite: ['di', 'diste', 'dio', 'dimos', 'dieron'],
+    subjunctive: ['dé', 'des', 'dé', 'demos', 'den'],
+    // imperfect/future/conditional are regular for dar.
+  },
+  salir: {
+    present: ['salgo', 'sales', 'sale', 'salimos', 'salen'],
+    future: ['saldré', 'saldrás', 'saldrá', 'saldremos', 'saldrán'],
+    conditional: ['saldría', 'saldrías', 'saldría', 'saldríamos', 'saldrían'],
+    subjunctive: ['salga', 'salgas', 'salga', 'salgamos', 'salgan'],
+    // preterite/imperfect are regular for salir.
+  },
+  venir: {
+    present: ['vengo', 'vienes', 'viene', 'venimos', 'vienen'],
+    preterite: ['vine', 'viniste', 'vino', 'vinimos', 'vinieron'],
+    future: ['vendré', 'vendrás', 'vendrá', 'vendremos', 'vendrán'],
+    conditional: ['vendría', 'vendrías', 'vendría', 'vendríamos', 'vendrían'],
+    subjunctive: ['venga', 'vengas', 'venga', 'vengamos', 'vengan'],
+  },
+  poner: {
+    present: ['pongo', 'pones', 'pone', 'ponemos', 'ponen'],
+    preterite: ['puse', 'pusiste', 'puso', 'pusimos', 'pusieron'],
+    future: ['pondré', 'pondrás', 'pondrá', 'pondremos', 'pondrán'],
+    conditional: ['pondría', 'pondrías', 'pondría', 'pondríamos', 'pondrían'],
+    subjunctive: ['ponga', 'pongas', 'ponga', 'pongamos', 'pongan'],
+  },
+  saber: {
+    present: ['sé', 'sabes', 'sabe', 'sabemos', 'saben'],
+    preterite: ['supe', 'supiste', 'supo', 'supimos', 'supieron'],
+    future: ['sabré', 'sabrás', 'sabrá', 'sabremos', 'sabrán'],
+    conditional: ['sabría', 'sabrías', 'sabría', 'sabríamos', 'sabrían'],
+    subjunctive: ['sepa', 'sepas', 'sepa', 'sepamos', 'sepan'],
+  },
+  decir: {
+    present: ['digo', 'dices', 'dice', 'decimos', 'dicen'],
+    preterite: ['dije', 'dijiste', 'dijo', 'dijimos', 'dijeron'],
+    future: ['diré', 'dirás', 'dirá', 'diremos', 'dirán'],
+    conditional: ['diría', 'dirías', 'diría', 'diríamos', 'dirían'],
+    subjunctive: ['diga', 'digas', 'diga', 'digamos', 'digan'],
+  },
+  // Reflexive-verb stems (looked up by their non-reflexive infinitive).
+  despertar: { // e -> ie, regular everywhere else
+    present: ['despierto', 'despiertas', 'despierta', 'despertamos', 'despiertan'],
+    subjunctive: ['despierte', 'despiertes', 'despierte', 'despertemos', 'despierten'],
+  },
+  acostar: { // o -> ue, regular everywhere else
+    present: ['acuesto', 'acuestas', 'acuesta', 'acostamos', 'acuestan'],
+    subjunctive: ['acueste', 'acuestes', 'acueste', 'acostemos', 'acuesten'],
+  },
+  vestir: { // e -> i, including the secondary change in preterite/subj. 3rd person + subj. nosotros
+    present: ['visto', 'vistes', 'viste', 'vestimos', 'visten'],
+    preterite: ['vestí', 'vestiste', 'vistió', 'vestimos', 'vistieron'],
+    subjunctive: ['vista', 'vistas', 'vista', 'vistamos', 'vistan'],
+  },
+  sentir: { // e -> ie, with secondary e -> i in preterite 3rd person + subj. nosotros
+    present: ['siento', 'sientes', 'siente', 'sentimos', 'sienten'],
+    preterite: ['sentí', 'sentiste', 'sintió', 'sentimos', 'sintieron'],
+    subjunctive: ['sienta', 'sientas', 'sienta', 'sintamos', 'sientan'],
+  },
 };
 
 // tense: 'present' | 'preterite' | 'imperfect' | 'future' | 'conditional' | 'subjunctive' | 'imperfectSubjunctive'
