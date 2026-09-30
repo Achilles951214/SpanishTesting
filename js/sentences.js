@@ -38,6 +38,9 @@ const TRIGGERS = [
 // via a purpose connector instead of a triggering verb.
 const COMPLEX_TEMPLATES = ['trigger', 'cuando', 'si', 'aunque', 'porque', 'paraQue'];
 const AUNQUE_MOODS = ['indicative', 'subjunctive'];
+// Real ("si llueve, cancelaremos") vs. hypothetical ("si fuera rico, viajaría")
+// — the two get mixed up often enough to drill side by side, same as aunque's moods.
+const SI_KINDS = ['real', 'hypothetical'];
 
 // poder/querer read oddly as a subordinate clause's only verb (they want an
 // infinitive complement, not just an adverb) — keep them to the modal/trigger
@@ -180,7 +183,6 @@ function randomSimpleState(rng, keep = {}) {
     subjectIndex: keep.subjectIndex ?? Math.floor(rng() * SUBJECTS.length),
     complementIndex: keep.complementIndex ?? Math.floor(rng() * 3),
     objectIndex: keep.objectIndex ?? Math.floor(rng() * OBJECT_PRONOUNS.length),
-    setCount: 0,
   };
 }
 
@@ -188,10 +190,10 @@ export function startSimple(rng) {
   return randomSimpleState(rng);
 }
 
-// Advance within a set of 5: keep the same verb + template, change ONE of
-// {subject, tense} so only a single grammatical element shifts each step.
+// Vary ONE of {subject, tense} so only a single grammatical element shifts
+// at a time; caller decides how many of these to chain before moving on.
 export function advanceSimple(state, rng) {
-  const next = { ...state, setCount: state.setCount + 1 };
+  const next = { ...state };
   const changeSubject = rng() < 0.65;
   if (changeSubject) {
     next.subjectIndex = pickOtherIndex(SUBJECTS, state.subjectIndex, rng);
@@ -202,24 +204,6 @@ export function advanceSimple(state, rng) {
     next.objectIndex = pickOtherIndex(OBJECT_PRONOUNS, state.objectIndex, rng);
   }
   return next;
-}
-
-// "Keep going, same verb": cycle to a different construction (template) for
-// variety while sticking to the same verb — but only when the new template
-// draws from the same verb pool (reflexive/gustar are lexically separate).
-export function continueSameVerb(state, rng) {
-  const otherTemplates = SIMPLE_TEMPLATES.filter((t) => t !== state.template);
-  const nextTemplate = pick(otherTemplates, rng);
-  const samePool = poolForTemplate(state.template) === poolForTemplate(nextTemplate);
-  const verb = samePool ? poolForTemplate(nextTemplate).find((v) => v.infinitive === state.verbInfinitive) : undefined;
-  return randomSimpleState(rng, { verb, template: nextTemplate });
-}
-
-// "Fresh verb": pick a new verb within the same template's pool and start a new set of 5.
-export function freshVerbSimple(state, rng) {
-  const pool = poolForTemplate(state.template);
-  const otherVerbs = pool.filter((v) => v.infinitive !== state.verbInfinitive);
-  return randomSimpleState(rng, { template: state.template, verb: pick(otherVerbs, rng) });
 }
 
 export function buildSimpleSentence(state) {
@@ -283,8 +267,16 @@ const COMPLEX_TEMPLATE_FIELDS = {
   aunque: ['subject1', 'subject2', 'verb1', 'verb2'],
   porque: ['subject1', 'subject2', 'verb1', 'verb2'],
   paraQue: ['subject1', 'subject2', 'verb1', 'verb2'],
-  si: ['subject1', 'verb2'],
+  // 'real' si only renders verb1+verb2 on subject1 (no subject2); 'hypothetical'
+  // si only renders verb2 (the si-clause itself is fixed on tener).
 };
+
+function complexFieldsFor(state) {
+  if (state.templateName === 'si') {
+    return state.siKind === 'real' ? ['subject1', 'verb1', 'verb2'] : ['subject1', 'verb2'];
+  }
+  return COMPLEX_TEMPLATE_FIELDS[state.templateName] || ['subject2', 'verb2'];
+}
 
 function randomComplexState(rng, keep = {}) {
   const templateName = keep.templateName || pick(COMPLEX_TEMPLATES, rng);
@@ -295,15 +287,15 @@ function randomComplexState(rng, keep = {}) {
     templateName,
     triggerIndex: keep.triggerIndex ?? Math.floor(rng() * TRIGGERS.length),
     mood: keep.mood || pick(AUNQUE_MOODS, rng),
+    siKind: keep.siKind || pick(SI_KINDS, rng),
     subject1Index,
     subject2Index: keep.subject2Index ?? pickOtherIndex(SUBJECTS, subject1Index, rng),
-    // Two-verb templates (cuando/aunque/porque/paraQue) use verb1 for the
-    // connector clause and verb2 for the other; single-verb templates only
-    // render verb2.
+    // Two-verb templates (cuando/aunque/porque/paraQue/real-si) use verb1 for
+    // the connector clause and verb2 for the other; single-verb templates
+    // (trigger, hypothetical-si) only render verb2.
     verb1Infinitive: (keep.verb1 || pick(otherVerbs, rng)).infinitive,
     verb2Infinitive: verb2.infinitive,
     complementIndex: keep.complementIndex ?? Math.floor(rng() * 2),
-    setCount: 0,
   };
 }
 
@@ -311,12 +303,11 @@ export function startComplex(rng) {
   return randomComplexState(rng);
 }
 
-// Advance within a set of 5: keep the template (and, for 'aunque', the
-// mood) fixed, and change ONE field the current template actually uses —
-// one or two grammatical elements shifting at a time.
+// Vary ONE field the current template actually uses — one or two
+// grammatical elements shifting at a time; caller decides the streak length.
 export function advanceComplex(state, rng) {
-  const next = { ...state, setCount: state.setCount + 1 };
-  const fields = COMPLEX_TEMPLATE_FIELDS[state.templateName] || ['subject2', 'verb2'];
+  const next = { ...state };
+  const fields = complexFieldsFor(state);
   const field = pick(fields, rng);
   if (field === 'subject1') {
     // Must stay distinct from subject2, not just from its own old value.
@@ -331,20 +322,6 @@ export function advanceComplex(state, rng) {
     next.verb2Infinitive = pick(otherVerbs, rng).infinitive;
   }
   return next;
-}
-
-export function continueSameVerbComplex(state, rng) {
-  const otherTemplates = COMPLEX_TEMPLATES.filter((t) => t !== state.templateName);
-  return randomComplexState(rng, {
-    templateName: pick(otherTemplates, rng),
-    verb2: verbByInfinitive(state.verb2Infinitive),
-    verb1: verbByInfinitive(state.verb1Infinitive),
-  });
-}
-
-export function freshVerbComplex(state, rng) {
-  const otherVerbs = COMPLEX_VERB_POOL.filter((v) => v.infinitive !== state.verb2Infinitive);
-  return randomComplexState(rng, { verb2: pick(otherVerbs, rng) });
 }
 
 export function buildComplexSentence(state) {
@@ -444,13 +421,26 @@ export function buildComplexSentence(state) {
     return { es, en, tag: `para que + subjuntivo (propósito) · ${subject1.pron} → ${subject2.pron}` };
   }
 
-  // 'si' — hypothetical with tener (imperfect subjunctive) + conditional.
-  // Spanish drops the repeated subject pronoun in the second clause.
+  // 'si' — real (present indicative condition + future result) vs.
+  // hypothetical (imperfect subjunctive + conditional), drilled side by
+  // side since mixing the two up is exactly the tracked error.
+  if (state.siKind === 'real') {
+    const complement1 = pickComplement(verb1, state.complementIndex, subject1.personIndex);
+    const complement2 = pickComplement(verb2, state.complementIndex, subject1.personIndex);
+    const condForm = conjugate(verb1, 'present', subject1.personIndex);
+    const condEn = englishForm(verb1.en, 'present', subject1.personIndex);
+    const resultForm = conjugate(verb2, 'future', subject1.personIndex);
+    const es = `Si ${subject1.pron} ${condForm} ${complement1.es}, ${subject1.pron} ${resultForm} ${complement2.es}.`;
+    const en = `If ${subject1.en} ${condEn} ${complement1.en}, ${subject1.en} will ${verb2.en.base} ${complement2.en}.`;
+    return { es, en, tag: `si real (indicativo) · ${subject1.pron}` };
+  }
+
+  // hypothetical — Spanish drops the repeated subject pronoun in the second clause.
   const complement = pickComplement(verb2, state.complementIndex, subject1.personIndex);
   const tenerVerb = verbByInfinitive('tener');
   const siForm = conjugate(tenerVerb, 'imperfectSubjunctive', subject1.personIndex);
   const verb2Cond = conjugate(verb2, 'conditional', subject1.personIndex);
   const es = `Si ${subject1.pron} ${siForm} tiempo, ${verb2Cond} ${complement.es}.`;
   const en = `If ${subject1.en} had time, ${subject1.en} would ${verb2.en.base} ${complement.en}.`;
-  return { es, en, tag: `si + imperf. subj., condicional · ${subject1.pron}` };
+  return { es, en, tag: `si hipotético (subj. imperf.) · ${subject1.pron}` };
 }

@@ -15,15 +15,17 @@
 
   <header class="topbar">
     <h1>Conjuga</h1>
-    <div class="mode-toggle" role="group" aria-label="Difficulty mode">
-      <button id="mode-simple" class="mode-btn" aria-pressed="true">Simple</button>
-      <button id="mode-complex" class="mode-btn" aria-pressed="false">Complex</button>
+    <div class="header-controls">
+      <button id="pause-btn" class="pause-btn" aria-label="Pause">Pause</button>
+      <div class="mode-toggle" role="group" aria-label="Difficulty mode">
+        <button id="mode-simple" class="mode-btn" aria-pressed="true">Simple</button>
+        <button id="mode-complex" class="mode-btn" aria-pressed="false">Complex</button>
+      </div>
     </div>
   </header>
 
   <div class="meta-row">
     <span id="tag" class="tag"></span>
-    <div id="dots" class="dots" aria-hidden="true"></div>
   </div>
 
   <main class="card">
@@ -38,18 +40,18 @@
     <div id="spanish-block" class="hidden">
       <span class="label">Español</span>
       <p id="spanish-text" class="sentence spanish"></p>
+      <p id="note-text" class="note hidden"></p>
     </div>
     <p id="hint-text" class="hint">Tap "Show Spanish" when ready.</p>
   </main>
 
   <button id="action-btn" class="primary-btn">Show Spanish</button>
 
-  <div id="prompt-overlay" class="overlay hidden">
+  <div id="pause-overlay" class="overlay hidden">
     <div class="prompt-card">
-      <div class="prompt-title">Nice work — 5 done!</div>
-      <p class="prompt-body">Keep drilling this verb, or start a fresh one?</p>
-      <button id="prompt-continue" class="primary-btn">Keep going, same verb</button>
-      <button id="prompt-fresh" class="secondary-btn">Fresh verb</button>
+      <div class="prompt-title">Paused</div>
+      <p class="prompt-body">Take your time. Tap resume when you're ready to keep going.</p>
+      <button id="resume-btn" class="primary-btn">Resume</button>
     </div>
   </div>
 

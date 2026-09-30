@@ -194,6 +194,13 @@ const IRREGULAR = {
     preterite: ['sentí', 'sentiste', 'sintió', 'sentimos', 'sintieron'],
     subjunctive: ['sienta', 'sientas', 'sienta', 'sintamos', 'sientan'],
   },
+  traer: {
+    present: ['traigo', 'traes', 'trae', 'traemos', 'traen'],
+    // j-stem preterite drops the "i" in the 3rd-plural ending: trajeron, not trajieron.
+    preterite: ['traje', 'trajiste', 'trajo', 'trajimos', 'trajeron'],
+    subjunctive: ['traiga', 'traigas', 'traiga', 'traigamos', 'traigan'],
+    // imperfect/future/conditional are regular for traer.
+  },
 };
 
 // tense: 'present' | 'preterite' | 'imperfect' | 'future' | 'conditional' | 'subjunctive' | 'imperfectSubjunctive'

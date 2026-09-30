@@ -66,6 +66,15 @@ export const VERBS = [
     complements: [{ es: 'la respuesta', en: 'the answer' }, { es: 'nadar', en: 'how to swim' }] },
   { infinitive: 'decir', type: 'ir', irregular: true, en: { base: 'say', thirdPerson: 'says', past: 'said' },
     complements: [{ es: 'la verdad', en: 'the truth' }, { es: 'adiós', en: 'goodbye' }] },
+  { infinitive: 'traer', type: 'er', irregular: true, en: { base: 'bring', thirdPerson: 'brings', past: 'brought' },
+    complements: [{ es: 'comida', en: 'food' }, { es: 'el postre', en: 'dessert' }] },
+];
+
+// The verbs behind the top tracked error (Tier 1 of the seed list): irregular
+// preterite stems where present tense tends to substitute in under pressure,
+// and person endings slip switching between yo/él/nosotros mid-thought.
+export const PRETERITE_FOCUS_VERBS = [
+  'ser', 'ir', 'estar', 'tener', 'hacer', 'poder', 'poner', 'querer', 'venir', 'decir', 'traer', 'saber',
 ];
 
 // Reflexive verbs (conjugated as their non-reflexive infinitive; the app

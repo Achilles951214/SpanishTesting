@@ -1,11 +1,13 @@
-const CACHE_NAME = 'conjuga-v1';
+const CACHE_NAME = 'conjuga-v2';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './manifest.webmanifest',
   './js/app.js',
+  './js/engine.js',
   './js/sentences.js',
+  './js/seeds.js',
   './js/conjugate.js',
   './js/verbs.js',
   './icons/icon-192.png',
