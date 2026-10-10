@@ -190,22 +190,6 @@ export function startSimple(rng) {
   return randomSimpleState(rng);
 }
 
-// Vary ONE of {subject, tense} so only a single grammatical element shifts
-// at a time; caller decides how many of these to chain before moving on.
-export function advanceSimple(state, rng) {
-  const next = { ...state };
-  const changeSubject = rng() < 0.65;
-  if (changeSubject) {
-    next.subjectIndex = pickOtherIndex(SUBJECTS, state.subjectIndex, rng);
-  } else {
-    next.tenseIndex = pickOtherIndex(SIMPLE_TENSES, state.tenseIndex, rng);
-  }
-  if (next.template === 'object') {
-    next.objectIndex = pickOtherIndex(OBJECT_PRONOUNS, state.objectIndex, rng);
-  }
-  return next;
-}
-
 export function buildSimpleSentence(state) {
   const subject = SUBJECTS[state.subjectIndex];
   const tense = SIMPLE_TENSES[state.tenseIndex];
@@ -259,25 +243,6 @@ export function buildSimpleSentence(state) {
 
 // ---------- Complex mode ----------
 
-// Which state fields each template's sentence actually reads — drives both
-// the initial randomization and which field(s) advanceComplex may vary.
-const COMPLEX_TEMPLATE_FIELDS = {
-  trigger: ['subject1', 'subject2', 'verb2'],
-  cuando: ['subject1', 'subject2', 'verb1', 'verb2'],
-  aunque: ['subject1', 'subject2', 'verb1', 'verb2'],
-  porque: ['subject1', 'subject2', 'verb1', 'verb2'],
-  paraQue: ['subject1', 'subject2', 'verb1', 'verb2'],
-  // 'real' si only renders verb1+verb2 on subject1 (no subject2); 'hypothetical'
-  // si only renders verb2 (the si-clause itself is fixed on tener).
-};
-
-function complexFieldsFor(state) {
-  if (state.templateName === 'si') {
-    return state.siKind === 'real' ? ['subject1', 'verb1', 'verb2'] : ['subject1', 'verb2'];
-  }
-  return COMPLEX_TEMPLATE_FIELDS[state.templateName] || ['subject2', 'verb2'];
-}
-
 function randomComplexState(rng, keep = {}) {
   const templateName = keep.templateName || pick(COMPLEX_TEMPLATES, rng);
   const subject1Index = keep.subject1Index ?? Math.floor(rng() * SUBJECTS.length);
@@ -301,27 +266,6 @@ function randomComplexState(rng, keep = {}) {
 
 export function startComplex(rng) {
   return randomComplexState(rng);
-}
-
-// Vary ONE field the current template actually uses — one or two
-// grammatical elements shifting at a time; caller decides the streak length.
-export function advanceComplex(state, rng) {
-  const next = { ...state };
-  const fields = complexFieldsFor(state);
-  const field = pick(fields, rng);
-  if (field === 'subject1') {
-    // Must stay distinct from subject2, not just from its own old value.
-    next.subject1Index = pickOtherIndex(SUBJECTS, state.subject2Index, rng);
-  } else if (field === 'subject2') {
-    next.subject2Index = pickOtherIndex(SUBJECTS, state.subject1Index, rng);
-  } else if (field === 'verb1') {
-    const otherVerbs = COMPLEX_VERB_POOL.filter((v) => v.infinitive !== state.verb1Infinitive);
-    next.verb1Infinitive = pick(otherVerbs, rng).infinitive;
-  } else {
-    const otherVerbs = COMPLEX_VERB_POOL.filter((v) => v.infinitive !== state.verb2Infinitive);
-    next.verb2Infinitive = pick(otherVerbs, rng).infinitive;
-  }
-  return next;
 }
 
 export function buildComplexSentence(state) {

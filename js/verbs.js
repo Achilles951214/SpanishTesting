@@ -68,6 +68,11 @@ export const VERBS = [
     complements: [{ es: 'la verdad', en: 'the truth' }, { es: 'adiós', en: 'goodbye' }] },
   { infinitive: 'traer', type: 'er', irregular: true, en: { base: 'bring', thirdPerson: 'brings', past: 'brought' },
     complements: [{ es: 'comida', en: 'food' }, { es: 'el postre', en: 'dessert' }] },
+  // Regular in every tense except preterite, which needs a written accent
+  // and a y-insertion in the 3rd person (leíste, leyó, leyeron) — the
+  // regular engine alone would produce "leiste"/"leió"/"leieron".
+  { infinitive: 'leer', type: 'er', irregular: true, en: { base: 'read', thirdPerson: 'reads', past: 'read' },
+    complements: [{ es: 'el periódico', en: 'the newspaper' }, { es: 'un libro', en: 'a book' }] },
 ];
 
 // The verbs behind the top tracked error (Tier 1 of the seed list): irregular

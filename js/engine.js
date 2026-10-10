@@ -1,13 +1,11 @@
-// Orchestrates what to show next: blends the curated, tier-weighted seed
-// sentences with the procedural generator, and holds one "focus" (a seed
-// tier, or a procedural verb/template) for a random streak of 3-5 cards
-// before rolling a new one — automatically, with no user choice involved.
+// Picks what to show next: an independent weighted random draw every card,
+// blending the curated seed tiers (weighted toward the highest-priority
+// ones) with the general procedural generator (lower weight — "now and
+// then" variety). No streak-holding, no repeat of the same verb/sentence as
+// the card immediately before it.
 import { SEED_TIERS } from './seeds.js';
 import { PRETERITE_FOCUS_VERBS } from './verbs.js';
-import {
-  startSimple, advanceSimple, buildSimpleSentence,
-  startComplex, advanceComplex, buildComplexSentence,
-} from './sentences.js';
+import { startSimple, buildSimpleSentence, startComplex, buildComplexSentence } from './sentences.js';
 
 // Weight for "let the procedural generator pick anything" within a mode,
 // on the same scale as the seed tiers' own weights (see seeds.js).
@@ -21,19 +19,6 @@ function weightedPick(items, rng) {
     if (r <= 0) return it;
   }
   return items[items.length - 1];
-}
-
-function randomStreak(rng) {
-  return 3 + Math.floor(rng() * 3); // 3, 4, or 5
-}
-
-function shuffledIndices(n, rng) {
-  const arr = Array.from({ length: n }, (_, i) => i);
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
 }
 
 function seedTiersForMode(mode) {
@@ -52,67 +37,61 @@ function biasedStartSimple(rng) {
   return startSimple(rng);
 }
 
-function pickFocus(mode, rng) {
+function drawCard(mode, rng) {
   const tiers = seedTiersForMode(mode).map((tier) => ({ kind: 'seed', tier, weight: tier.weight }));
   const pool = [...tiers, { kind: 'procedural', weight: PROCEDURAL_WEIGHT }];
-  return weightedPick(pool, rng);
+  const chosen = weightedPick(pool, rng);
+
+  if (chosen.kind === 'seed') {
+    const index = Math.floor(rng() * chosen.tier.sentences.length);
+    const item = chosen.tier.sentences[index];
+    return {
+      signature: `seed:${chosen.tier.id}:${index}`,
+      card: { es: item.es, en: item.en, note: item.note, tag: `Tier ${chosen.tier.id} · ${chosen.tier.name}` },
+    };
+  }
+
+  const state = mode === 'simple' ? biasedStartSimple(rng) : startComplex(rng);
+  const card = mode === 'simple' ? buildSimpleSentence(state) : buildComplexSentence(state);
+  const verbKey = mode === 'simple' ? state.verbInfinitive : state.verb2Infinitive;
+  return { signature: `proc:${verbKey}`, card };
 }
 
 export function createEngine(rng) {
   let mode = 'simple';
-  let focus;
-  let streakRemaining;
-  let proceduralState;
-  let seedOrder;
-  let seedPos;
+  let lastSignature = null;
+  let current;
 
-  function rollFocus() {
-    focus = pickFocus(mode, rng);
-    streakRemaining = randomStreak(rng);
-    if (focus.kind === 'procedural') {
-      proceduralState = mode === 'simple' ? biasedStartSimple(rng) : startComplex(rng);
-      seedOrder = null;
-      seedPos = 0;
-    } else {
-      proceduralState = null;
-      seedOrder = shuffledIndices(focus.tier.sentences.length, rng);
-      seedPos = 0;
+  function draw() {
+    let result = drawCard(mode, rng);
+    // Avoid repeating the exact same verb/sentence as the card right before
+    // it; a handful of retries is enough since the pool is large relative
+    // to the chance of a repeat.
+    for (let attempt = 0; attempt < 8 && result.signature === lastSignature; attempt++) {
+      result = drawCard(mode, rng);
     }
+    lastSignature = result.signature;
+    current = result.card;
   }
 
-  function currentCard() {
-    if (focus.kind === 'seed') {
-      const item = focus.tier.sentences[seedOrder[seedPos]];
-      return { es: item.es, en: item.en, note: item.note, tag: `Tier ${focus.tier.id} · ${focus.tier.name}` };
-    }
-    return mode === 'simple' ? buildSimpleSentence(proceduralState) : buildComplexSentence(proceduralState);
-  }
-
-  rollFocus();
+  draw();
 
   return {
     get mode() {
       return mode;
     },
     current() {
-      return currentCard();
+      return current;
     },
     next() {
-      streakRemaining -= 1;
-      if (streakRemaining <= 0) {
-        rollFocus();
-      } else if (focus.kind === 'seed') {
-        seedPos += 1;
-      } else {
-        proceduralState = mode === 'simple' ? advanceSimple(proceduralState, rng) : advanceComplex(proceduralState, rng);
-      }
-      return currentCard();
+      draw();
+      return current;
     },
     setMode(newMode) {
-      if (newMode === mode) return currentCard();
+      if (newMode === mode) return current;
       mode = newMode;
-      rollFocus();
-      return currentCard();
+      draw();
+      return current;
     },
   };
 }

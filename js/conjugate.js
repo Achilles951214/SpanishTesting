@@ -201,6 +201,10 @@ const IRREGULAR = {
     subjunctive: ['traiga', 'traigas', 'traiga', 'traigamos', 'traigan'],
     // imperfect/future/conditional are regular for traer.
   },
+  leer: {
+    // present/subjunctive/imperfect/future/conditional are all regular for leer.
+    preterite: ['leí', 'leíste', 'leyó', 'leímos', 'leyeron'],
+  },
 };
 
 // tense: 'present' | 'preterite' | 'imperfect' | 'future' | 'conditional' | 'subjunctive' | 'imperfectSubjunctive'
