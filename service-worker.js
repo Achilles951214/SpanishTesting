@@ -1,4 +1,4 @@
-const CACHE_NAME = 'conjuga-v2';
+const CACHE_NAME = 'conjuga-v3';
 const ASSETS = [
   './',
   './index.html',

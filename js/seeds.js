@@ -7,14 +7,15 @@
 // hypothetical "si", an accent that carries the whole meaning, a noun whose
 // gender never matches its referent) that a template can't reliably recreate.
 //
-// `weight` sets how often this tier is picked relative to the others (and to
-// the procedural generator) within its mode. `note`, where present, is the
-// specific thing to notice — shown after the Spanish is revealed.
+// Tiers mix easy (no subjunctive) and hard (Tier 6, subjunctive) content in
+// one pool — engine.js picks across all of them plus the procedural
+// generator with no separate mode. `weight` sets how often this tier is
+// picked relative to the others. `note`, where present, is the specific
+// thing to notice — shown after the Spanish is revealed.
 
 export const SEED_TIERS = [
   {
     id: 1,
-    mode: 'simple',
     weight: 12,
     name: 'Preterite, person-agreement under pressure',
     sentences: [
@@ -33,7 +34,6 @@ export const SEED_TIERS = [
   },
   {
     id: 2,
-    mode: 'simple',
     weight: 9,
     name: 'Preterite vs. imperfect, blended in one narrative',
     sentences: [
@@ -53,7 +53,6 @@ export const SEED_TIERS = [
   },
   {
     id: 3,
-    mode: 'simple',
     weight: 8,
     name: 'Gender & number agreement',
     sentences: [
@@ -72,7 +71,6 @@ export const SEED_TIERS = [
   },
   {
     id: 4,
-    mode: 'simple',
     weight: 7,
     name: 'Gustar-family with a full noun, not a pronoun',
     sentences: [
@@ -86,7 +84,6 @@ export const SEED_TIERS = [
   },
   {
     id: 5,
-    mode: 'simple',
     weight: 6,
     name: 'Accent homophones — the mark carries the meaning',
     sentences: [
@@ -100,8 +97,7 @@ export const SEED_TIERS = [
   },
   {
     id: 6,
-    mode: 'complex',
-    weight: 14,
+    weight: 10,
     name: 'Subjunctive: triggers, sequencing, real vs. hypothetical',
     sentences: [
       { es: 'Tenía miedo de que llegáramos tarde.', en: 'I was afraid that we would arrive late.', note: 'past trigger → imperfect subjunctive, not present' },
@@ -116,7 +112,6 @@ export const SEED_TIERS = [
   },
   {
     id: 7,
-    mode: 'simple',
     weight: 5,
     name: 'Verb + preposition pairs',
     sentences: [
@@ -131,7 +126,6 @@ export const SEED_TIERS = [
   },
   {
     id: 8,
-    mode: 'simple',
     weight: 4,
     name: 'Fixed-gender nouns — don’t flex with the referent',
     sentences: [

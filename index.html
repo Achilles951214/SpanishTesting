@@ -14,13 +14,13 @@
 <div id="app">
 
   <header class="topbar">
-    <h1>Conjuga</h1>
+    <div class="title-block">
+      <h1>Conjuga</h1>
+      <span id="version" class="version"></span>
+    </div>
     <div class="header-controls">
-      <button id="pause-btn" class="pause-btn" aria-label="Pause">Pause</button>
-      <div class="mode-toggle" role="group" aria-label="Difficulty mode">
-        <button id="mode-simple" class="mode-btn" aria-pressed="true">Simple</button>
-        <button id="mode-complex" class="mode-btn" aria-pressed="false">Complex</button>
-      </div>
+      <button id="back-btn" class="icon-btn" aria-label="Back to previous sentence" disabled>Back</button>
+      <button id="pause-btn" class="icon-btn" aria-label="Pause">Pause</button>
     </div>
   </header>
 

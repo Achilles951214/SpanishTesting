@@ -1,15 +1,21 @@
-// Picks what to show next: an independent weighted random draw every card,
-// blending the curated seed tiers (weighted toward the highest-priority
-// ones) with the general procedural generator (lower weight — "now and
-// then" variety). No streak-holding, no repeat of the same verb/sentence as
-// the card immediately before it.
+// Picks what to show next: one unified pool mixing easy and hard content —
+// all 8 seed tiers (Tier 6 is the hard/subjunctive one, the rest are easy)
+// plus the procedural generator (both its simple and complex templates) —
+// with no separate mode. Every draw is an independent weighted random pick,
+// and the same verb or seed sentence is blocked from recurring within the
+// last RECENT_WINDOW draws (not just the immediately-previous one).
 import { SEED_TIERS } from './seeds.js';
 import { PRETERITE_FOCUS_VERBS } from './verbs.js';
 import { startSimple, buildSimpleSentence, startComplex, buildComplexSentence } from './sentences.js';
 
-// Weight for "let the procedural generator pick anything" within a mode,
-// on the same scale as the seed tiers' own weights (see seeds.js).
-const PROCEDURAL_WEIGHT = 10;
+// Procedural generation has far more headroom than any single seed tier
+// (many verbs x tenses x subjects x templates), so it gets the biggest
+// share here — the seed tiers stay in the mix but no longer dominate it.
+const PROCEDURAL_SIMPLE_WEIGHT = 24;
+const PROCEDURAL_COMPLEX_WEIGHT = 16;
+
+const RECENT_WINDOW = 10;
+const MAX_DRAW_ATTEMPTS = 20;
 
 function weightedPick(items, rng) {
   const total = items.reduce((sum, it) => sum + it.weight, 0);
@@ -19,10 +25,6 @@ function weightedPick(items, rng) {
     if (r <= 0) return it;
   }
   return items[items.length - 1];
-}
-
-function seedTiersForMode(mode) {
-  return SEED_TIERS.filter((t) => t.mode === mode);
 }
 
 // Tier 1 (preterite person-agreement) is the top-flagged error — nudge the
@@ -37,9 +39,12 @@ function biasedStartSimple(rng) {
   return startSimple(rng);
 }
 
-function drawCard(mode, rng) {
-  const tiers = seedTiersForMode(mode).map((tier) => ({ kind: 'seed', tier, weight: tier.weight }));
-  const pool = [...tiers, { kind: 'procedural', weight: PROCEDURAL_WEIGHT }];
+function drawOnce(rng) {
+  const pool = [
+    ...SEED_TIERS.map((tier) => ({ kind: 'seed', tier, weight: tier.weight })),
+    { kind: 'proceduralSimple', weight: PROCEDURAL_SIMPLE_WEIGHT },
+    { kind: 'proceduralComplex', weight: PROCEDURAL_COMPLEX_WEIGHT },
+  ];
   const chosen = weightedPick(pool, rng);
 
   if (chosen.kind === 'seed') {
@@ -51,47 +56,27 @@ function drawCard(mode, rng) {
     };
   }
 
-  const state = mode === 'simple' ? biasedStartSimple(rng) : startComplex(rng);
-  const card = mode === 'simple' ? buildSimpleSentence(state) : buildComplexSentence(state);
-  const verbKey = mode === 'simple' ? state.verbInfinitive : state.verb2Infinitive;
-  return { signature: `proc:${verbKey}`, card };
+  if (chosen.kind === 'proceduralSimple') {
+    const state = biasedStartSimple(rng);
+    return { signature: `verb:${state.verbInfinitive}`, card: buildSimpleSentence(state) };
+  }
+
+  const state = startComplex(rng);
+  return { signature: `verb:${state.verb2Infinitive}`, card: buildComplexSentence(state) };
 }
 
 export function createEngine(rng) {
-  let mode = 'simple';
-  let lastSignature = null;
-  let current;
+  const recent = [];
 
   function draw() {
-    let result = drawCard(mode, rng);
-    // Avoid repeating the exact same verb/sentence as the card right before
-    // it; a handful of retries is enough since the pool is large relative
-    // to the chance of a repeat.
-    for (let attempt = 0; attempt < 8 && result.signature === lastSignature; attempt++) {
-      result = drawCard(mode, rng);
+    let result = drawOnce(rng);
+    for (let attempt = 0; attempt < MAX_DRAW_ATTEMPTS && recent.includes(result.signature); attempt++) {
+      result = drawOnce(rng);
     }
-    lastSignature = result.signature;
-    current = result.card;
+    recent.push(result.signature);
+    if (recent.length > RECENT_WINDOW) recent.shift();
+    return result.card;
   }
 
-  draw();
-
-  return {
-    get mode() {
-      return mode;
-    },
-    current() {
-      return current;
-    },
-    next() {
-      draw();
-      return current;
-    },
-    setMode(newMode) {
-      if (newMode === mode) return current;
-      mode = newMode;
-      draw();
-      return current;
-    },
-  };
+  return { draw };
 }

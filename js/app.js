@@ -1,11 +1,14 @@
 import { createEngine } from './engine.js';
 
+const VERSION = 'v2026.10.13';
+const MAX_HISTORY = 50;
+
 const rng = Math.random;
 const engine = createEngine(rng);
 
 const el = {
-  modeSimple: document.getElementById('mode-simple'),
-  modeComplex: document.getElementById('mode-complex'),
+  version: document.getElementById('version'),
+  backBtn: document.getElementById('back-btn'),
   pauseBtn: document.getElementById('pause-btn'),
   tag: document.getElementById('tag'),
   timer: document.getElementById('timer'),
@@ -19,30 +22,35 @@ const el = {
   resumeBtn: document.getElementById('resume-btn'),
 };
 
-let current = engine.current();
-let revealed = false;
-let startTime = Date.now();
-let revealElapsedMs = null;
+el.version.textContent = VERSION;
+
+// Each history entry owns its own reveal state and timer, so stepping back
+// to review an earlier card never disturbs the live one still in progress.
+function newEntry(card) {
+  return { card, revealed: false, startTime: Date.now(), revealElapsedMs: null };
+}
+
+let history = [newEntry(engine.draw())];
+let pointer = 0;
 let paused = false;
 
-function resetTimer() {
-  startTime = Date.now();
-  revealElapsedMs = null;
+function entry() {
+  return history[pointer];
 }
 
 function render() {
-  el.modeSimple.setAttribute('aria-pressed', String(engine.mode === 'simple'));
-  el.modeComplex.setAttribute('aria-pressed', String(engine.mode === 'complex'));
+  const e = entry();
+  el.backBtn.disabled = pointer === 0;
 
-  el.tag.textContent = current.tag;
-  el.english.textContent = current.en;
+  el.tag.textContent = e.card.tag;
+  el.english.textContent = e.card.en;
 
-  if (revealed) {
+  if (e.revealed) {
     el.spanishBlock.classList.remove('hidden');
     el.hint.classList.add('hidden');
-    el.spanish.textContent = current.es;
-    if (current.note) {
-      el.note.textContent = current.note;
+    el.spanish.textContent = e.card.es;
+    if (e.card.note) {
+      el.note.textContent = e.card.note;
       el.note.classList.remove('hidden');
     } else {
       el.note.classList.add('hidden');
@@ -59,34 +67,40 @@ function render() {
 
 function tick() {
   if (paused) return;
-  const ms = revealed ? revealElapsedMs : Date.now() - startTime;
+  const e = entry();
+  const ms = e.revealed ? e.revealElapsedMs : Date.now() - e.startTime;
   el.timer.textContent = `${(ms / 1000).toFixed(1)}s`;
 }
 setInterval(tick, 100);
 
 el.actionBtn.addEventListener('click', () => {
-  if (!revealed) {
-    revealed = true;
-    revealElapsedMs = Date.now() - startTime;
+  const e = entry();
+  if (!e.revealed) {
+    e.revealed = true;
+    e.revealElapsedMs = Date.now() - e.startTime;
     render();
     return;
   }
-  current = engine.next();
-  revealed = false;
-  resetTimer();
+
+  if (pointer < history.length - 1) {
+    // Already-seen card ahead (we stepped back earlier) — just move forward.
+    pointer += 1;
+  } else {
+    history.push(newEntry(engine.draw()));
+    if (history.length > MAX_HISTORY) {
+      history.shift();
+    }
+    pointer = history.length - 1;
+  }
   render();
 });
 
-function setMode(newMode) {
-  if (engine.mode === newMode) return;
-  current = engine.setMode(newMode);
-  revealed = false;
-  resetTimer();
-  render();
-}
-
-el.modeSimple.addEventListener('click', () => setMode('simple'));
-el.modeComplex.addEventListener('click', () => setMode('complex'));
+el.backBtn.addEventListener('click', () => {
+  if (pointer > 0) {
+    pointer -= 1;
+    render();
+  }
+});
 
 el.pauseBtn.addEventListener('click', () => {
   paused = true;
@@ -95,7 +109,8 @@ el.pauseBtn.addEventListener('click', () => {
 
 el.resumeBtn.addEventListener('click', () => {
   paused = false;
-  resetTimer();
+  const e = entry();
+  if (!e.revealed) e.startTime = Date.now();
   render();
 });
 

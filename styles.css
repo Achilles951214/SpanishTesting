@@ -38,9 +38,20 @@ button { font-family: inherit; }
   justify-content: space-between;
 }
 
+.title-block {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
 .topbar h1 {
   font-size: 20px;
   margin: 0;
+}
+
+.version {
+  font-size: 11px;
+  color: var(--muted-2);
 }
 
 .header-controls {
@@ -49,7 +60,7 @@ button { font-family: inherit; }
   gap: 10px;
 }
 
-.pause-btn {
+.icon-btn {
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 7px 14px;
@@ -60,28 +71,9 @@ button { font-family: inherit; }
   color: var(--muted);
 }
 
-.mode-toggle {
-  display: flex;
-  background: var(--pill-bg);
-  border-radius: 999px;
-  padding: 3px;
-  gap: 2px;
-}
-
-.mode-btn {
-  border: none;
-  border-radius: 999px;
-  padding: 7px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  background: transparent;
-  color: var(--text);
-}
-
-.mode-btn[aria-pressed="true"] {
-  background: var(--accent);
-  color: var(--accent-contrast);
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .meta-row {
