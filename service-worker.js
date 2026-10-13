@@ -1,4 +1,4 @@
-const CACHE_NAME = 'conjuga-v3';
+const CACHE_NAME = 'conjuga-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -28,20 +28,22 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Network-first: a PWA bookmark often resumes from a frozen background tab
+// rather than doing a fresh navigation, so cache-first was serving stale
+// bytes indefinitely. This always tries the network first (so an open app
+// picks up a new deploy as soon as it's online) and only falls back to the
+// cache when offline.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
