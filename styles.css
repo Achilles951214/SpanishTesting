@@ -8,6 +8,9 @@
   --pill-bg: #EFEBE1;
   --accent: #2F6F62;
   --accent-contrast: #FFFFFF;
+  --flag-bg: #FBF1E4;
+  --flag-border: #E3C19A;
+  --flag-text: #9A5B14;
 }
 
 * { box-sizing: border-box; }
@@ -118,12 +121,40 @@ button { font-family: inherit; }
   font-weight: 700;
 }
 
+.tag-row {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .tag-reveal {
-  margin: 14px 0 0;
+  margin: 0;
+  flex: 1;
   font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.flag-btn {
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.flag-btn.flagged {
+  border-color: var(--flag-border);
+  background: var(--flag-bg);
+  color: var(--flag-text);
+  font-weight: 700;
 }
 
 .note {
@@ -205,6 +236,9 @@ button { font-family: inherit; }
     --pill-bg: #262A26;
     --accent: #4B9E8B;
     --accent-contrast: #0F1210;
+    --flag-bg: #2E2416;
+    --flag-border: #5A4320;
+    --flag-text: #D9A969;
   }
   .prompt-card { background: var(--card-bg); }
 }

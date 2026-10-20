@@ -1,6 +1,6 @@
 import { createEngine } from './engine.js';
 
-const VERSION = 'v2026.10.20';
+const VERSION = 'v2026.10.21';
 const MAX_HISTORY = 50;
 
 const rng = Math.random;
@@ -15,6 +15,7 @@ const el = {
   spanishBlock: document.getElementById('spanish-block'),
   spanish: document.getElementById('spanish-text'),
   tagReveal: document.getElementById('tag-text'),
+  flagBtn: document.getElementById('flag-btn'),
   note: document.getElementById('note-text'),
   hint: document.getElementById('hint-text'),
   actionBtn: document.getElementById('action-btn'),
@@ -27,7 +28,7 @@ el.version.textContent = VERSION;
 // Each history entry owns its own reveal state and timer, so stepping back
 // to review an earlier card never disturbs the live one still in progress.
 function newEntry(card) {
-  return { card, revealed: false, startTime: Date.now(), revealElapsedMs: null };
+  return { card, revealed: false, flagged: false, startTime: Date.now(), revealElapsedMs: null };
 }
 
 let history = [newEntry(engine.draw())];
@@ -49,6 +50,8 @@ function render() {
     el.hint.classList.add('hidden');
     el.spanish.textContent = e.card.es;
     el.tagReveal.textContent = e.card.tag;
+    el.flagBtn.textContent = e.flagged ? 'Flagged' : 'Flag to repeat';
+    el.flagBtn.classList.toggle('flagged', e.flagged);
     if (e.card.note) {
       el.note.textContent = e.card.note;
       el.note.classList.remove('hidden');
@@ -92,6 +95,14 @@ el.actionBtn.addEventListener('click', () => {
     }
     pointer = history.length - 1;
   }
+  render();
+});
+
+el.flagBtn.addEventListener('click', () => {
+  const e = entry();
+  if (!e.revealed) return;
+  e.flagged = !e.flagged;
+  engine.setFlag(e.card, e.flagged);
   render();
 });
 

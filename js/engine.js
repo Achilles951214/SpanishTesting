@@ -5,6 +5,11 @@
 // that round-robin guarantee is itself what keeps the currently-flagged
 // priority tiers (1, 9, 10) showing up every cycle, with no extra weighting
 // needed. When the bag empties, it's rebuilt and reshuffled for the next one.
+//
+// Flagging a card (app.js's Flag button) adds it as an extra slot in every
+// future bag alongside the 14 tiers, so it repeats roughly once per cycle
+// too — a deliberate, in-session-only boost. There's no persistence here:
+// flags live only in this engine instance and vanish on reload.
 import { SEED_TIERS } from './seeds.js';
 import { PRETERITE_FOCUS_VERBS } from './verbs.js';
 import { startSimple, buildSimpleSentence, startComplex, buildComplexSentence } from './sentences.js';
@@ -16,12 +21,6 @@ function shuffled(arr, rng) {
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
-}
-
-function buildBag(rng) {
-  const slots = SEED_TIERS.map((tier) => ({ kind: 'seed', tier }));
-  slots.push({ kind: 'procedural' });
-  return shuffled(slots, rng);
 }
 
 // Tier 1 (preterite person-agreement) is the top-flagged error — nudge the
@@ -40,6 +39,14 @@ export function createEngine(rng) {
   let bag = [];
   const lastSeedIndex = {}; // tier id -> last sentence index shown, to avoid an immediate repeat
   let lastProcVerb = null;
+  const boosted = []; // cards the user flagged — replayed verbatim, not regenerated
+
+  function buildBag() {
+    const slots = SEED_TIERS.map((tier) => ({ kind: 'seed', tier }));
+    slots.push({ kind: 'procedural' });
+    for (const card of boosted) slots.push({ kind: 'boosted', card });
+    return shuffled(slots, rng);
+  }
 
   function drawSeed(tier) {
     const sentences = tier.sentences;
@@ -66,9 +73,18 @@ export function createEngine(rng) {
 
   return {
     draw() {
-      if (bag.length === 0) bag = buildBag(rng);
+      if (bag.length === 0) bag = buildBag();
       const slot = bag.pop();
-      return slot.kind === 'seed' ? drawSeed(slot.tier) : drawProcedural();
+      if (slot.kind === 'seed') return drawSeed(slot.tier);
+      if (slot.kind === 'procedural') return drawProcedural();
+      return slot.card;
+    },
+
+    setFlag(card, flagged) {
+      const index = boosted.findIndex((c) => c.es === card.es);
+      if (flagged && index === -1) boosted.push(card);
+      if (!flagged && index !== -1) boosted.splice(index, 1);
+      // Mid-cycle flags join the very next bag, not retroactively this one.
     },
   };
 }
