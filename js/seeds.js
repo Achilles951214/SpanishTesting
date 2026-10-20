@@ -1,17 +1,18 @@
 // Curated seed sentences from the user's tracked recurring errors (tutor
-// feedback, not random). Tiers are ordered — and weighted — by how much
-// trouble each has actually caused; Tier 1 (preterite person-agreement) is
-// the single most-flagged issue, so it shows up most often. Fed in as
-// literal, hand-checked sentences rather than procedurally generated, since
-// several of these deliberately hinge on an exact contrast (real vs.
-// hypothetical "si", an accent that carries the whole meaning, a noun whose
-// gender never matches its referent) that a template can't reliably recreate.
+// feedback, not random). Fed in as literal, hand-checked sentences rather
+// than procedurally generated, since several of these deliberately hinge on
+// an exact contrast (real vs. hypothetical "si", an accent that carries the
+// whole meaning, a noun whose gender never matches its referent) that a
+// template can't reliably recreate.
 //
-// Tiers mix easy (no subjunctive) and hard (Tier 6, subjunctive) content in
-// one pool — engine.js picks across all of them plus the procedural
-// generator with no separate mode. `weight` sets how often this tier is
-// picked relative to the others. `note`, where present, is the specific
-// thing to notice — shown after the Spanish is revealed.
+// Tiers mix easy and hard (Tier 6, 9, 11 — subjunctive/reflexive-heavy)
+// content in one pool. engine.js round-robins through every tier once per
+// cycle (plus one procedural slot) rather than independently weighting them,
+// so a session reliably sees the full spread instead of leaning on whichever
+// tiers chance favors. `weight` is now mostly descriptive of priority — see
+// engine.js for how many times a tier repeats within a cycle. `note`, where
+// present, is the specific thing to notice — shown after the Spanish is
+// revealed, alongside which tier/pattern this was.
 
 export const SEED_TIERS = [
   {
@@ -67,6 +68,15 @@ export const SEED_TIERS = [
       { es: 'Esa actriz es un verdadero genio.', en: 'That actress is a true genius.' },
       { es: 'La víctima era un hombre joven.', en: 'The victim was a young man.' },
       { es: 'Esa historia es toda una leyenda.', en: 'That story is quite a legend.' },
+      { es: 'Es un libro de trescientas páginas.', en: 'It’s a three-hundred-page book.',
+        note: 'hundreds agree in gender with what they count: trescientas (not trescientos) because páginas is feminine' },
+      { es: 'Leyó seiscientas páginas en una semana.', en: 'She read six hundred pages in a week.',
+        note: 'seiscientas agrees with feminine páginas' },
+      { es: 'Las historias están entrelazadas.', en: 'The stories are intertwined.', note: 'las, not la — historias is plural' },
+      { es: 'Acabé el libro ayer, y acabo de empezar otro.', en: 'I finished the book yesterday, and I just started another one.',
+        note: 'acabé (preterite, "finished") vs. acabo de (present, "just did")' },
+      { es: 'Necesito pararme un momento.', en: 'I need to stop for a moment.', note: 'same subject for both verbs → infinitive, no "que"' },
+      { es: 'No hilemos tan fino.', en: 'Let’s not split hairs.', note: 'negative nosotros command uses the subjunctive form (hilemos)' },
     ],
   },
   {
@@ -134,6 +144,104 @@ export const SEED_TIERS = [
       { es: 'La víctima fue un hombre.', en: 'The victim was a man.', note: 'víctima stays feminine even for a man' },
       { es: 'Mi hermana es un genio.', en: 'My sister is a genius.', note: 'genio stays masculine even for a woman' },
       { es: 'Ese cantante es una estrella internacional.', en: 'That singer is an international star.', note: 'estrella stays feminine even for a man' },
+    ],
+  },
+  {
+    id: 9,
+    weight: 10,
+    name: 'Reflexive verbs — the pronoun has to change with the person',
+    sentences: [
+      { es: 'Me desperté temprano, me vestí rápido y salí sin desayunar.', en: 'I woke up early, got dressed quickly, and left without having breakfast.',
+        note: 'salir and desayunar are NOT reflexive' },
+      { es: 'Mis hijas se durmieron en el coche, así que volvimos a casa.', en: 'My daughters fell asleep in the car, so we went back home.',
+        note: 'dormirse = to fall asleep (reflexive); volver is not reflexive' },
+      { es: 'Nos enojamos porque el restaurante estaba cerrado, pero después nos calmamos.', en: 'We got angry because the restaurant was closed, but afterward we calmed down.' },
+      { es: 'Ella se quedó en casa porque se sentía cansada.', en: 'She stayed home because she felt tired.', note: 'quedarse = to stay (not quedar)' },
+      { es: 'Nos perdimos en la ciudad y tuvimos que preguntar.', en: 'We got lost in the city and had to ask.', note: 'perderse = to get lost' },
+      { es: 'No te preocupes; solo intenta relajarte.', en: 'Don’t worry; just try to relax.' },
+      { es: 'Tuvimos que abrigarnos bien y dormir muy juntos.', en: 'We had to wrap up warm and sleep very close together.',
+        note: 'dormir here is NOT reflexive — dormirse would mean "fall asleep"' },
+      { es: 'Me acuerdo de ese día, pero mi hermano no se acuerda de nada.', en: 'I remember that day, but my brother doesn’t remember anything.',
+        note: 'acordarse de = to remember' },
+      { es: 'Necesito detenerme un momento.', en: 'I need to stop for a moment.', note: 'same subject → infinitive with the reflexive ending attached (detenerme)' },
+      { es: 'Me puse nervioso cuando empezó la reunión.', en: 'I got nervous when the meeting started.', note: 'ponerse + adjective = "to become/get"' },
+      { es: 'Tenía miedo de que nos perdiéramos.', en: 'I was afraid that we would get lost.', note: 'NOT "me tenía miedo" — tener miedo isn’t reflexive' },
+      { es: 'Soñé con viajar a Japón.', en: 'I dreamed of traveling to Japan.', note: 'NOT "me soñé" — soñar isn’t reflexive' },
+      { es: 'Nos fuimos temprano porque la fiesta era aburrida.', en: 'We left early because the party was boring.', note: 'irse = "to leave" (different from ir)' },
+      { es: 'Ayer me acosté tarde y hoy me desperté cansado.', en: 'Yesterday I went to bed late and today I woke up tired.' },
+    ],
+  },
+  {
+    id: 10,
+    weight: 10,
+    name: 'Irregular preterite stems — present-for-preterite slips',
+    sentences: [
+      { es: 'Anduvimos en bicicleta casi trece millas.', en: 'We rode bikes almost thirteen miles.', note: 'anduvimos (preterite of andar), NOT andamos (present)' },
+      { es: 'Ayer vi a mi amigo, pero él no me vio.', en: 'Yesterday I saw my friend, but he didn’t see me.' },
+      { es: 'Leyó seiscientas páginas en una semana.', en: 'She read six hundred pages in a week.', note: 'leyó needs the written accent and the y: leyó, not leyó without it' },
+      { es: 'Conduje tres horas, pero ellos condujeron toda la noche.', en: 'I drove three hours, but they drove all night.' },
+      { es: 'Le di el libro a mi hermana y ella me dio las gracias.', en: 'I gave the book to my sister and she thanked me.', note: 'di/dio — no accent on dio even though it feels like it should have one' },
+      { es: 'Se cayó en la calle y nos asustamos.', en: 'He fell down in the street and we got scared.', note: 'caerse = to fall (reflexive); cayó needs the accent' },
+      { es: 'Ellos construyeron la casa en dos años.', en: 'They built the house in two years.', note: 'construyeron — the same y-insertion as leyeron' },
+      { es: 'Oí un ruido, pero no supe qué era.', en: 'I heard a noise, but I didn’t know what it was.', note: 'oí needs the accent; supe = "knew" (preterite of saber)' },
+    ],
+  },
+  {
+    id: 11,
+    weight: 6,
+    name: 'Opinion verbs — affirmative = indicative, negated = subjunctive',
+    sentences: [
+      { es: 'Pienso que la novela tiene lugar en el siglo diecisiete.', en: 'I think the novel takes place in the seventeenth century.', note: 'affirmative opinion → indicative' },
+      { es: 'No pienso que tenga lugar en el siglo diecisiete.', en: 'I don’t think it takes place in the seventeenth century.', note: 'negated opinion → subjunctive (tenga)' },
+      { es: 'Creo que tiene razón, pero no creo que lo sepa.', en: 'I think he’s right, but I don’t think he knows it.', note: 'affirmative creo → indicative (tiene); negated no creo → subjunctive (sepa)' },
+      { es: 'Opino que la reforma es necesaria.', en: 'I think the reform is necessary.', note: 'affirmative → indicative' },
+      { es: 'No opino que sea una buena idea.', en: 'I don’t think it’s a good idea.', note: 'negated opino → subjunctive (sea)' },
+      { es: 'Me parece que el tema es sensible.', en: 'It seems to me that the topic is sensitive.', note: 'affirmative → indicative' },
+      { es: 'No me parece que haya una solución fácil.', en: 'It doesn’t seem to me that there’s an easy solution.', note: 'negated me parece → subjunctive (haya)' },
+      { es: 'Es verdad que la población ha aumentado.', en: 'It’s true that the population has increased.', note: 'a stated fact stays indicative, even phrased as an opinion' },
+    ],
+  },
+  {
+    id: 12,
+    weight: 6,
+    name: 'English time/place phrases translated literally',
+    sentences: [
+      { es: 'La semana pasada mi esposa cumplió años.', en: 'Last week my wife had a birthday.', note: 'la semana pasada, NOT en la semana pasada' },
+      { es: 'Hacía mucho frío por la noche.', en: 'It was very cold at night.', note: 'por la noche, not en la noche; mucho frío, not mucha fría' },
+      { es: 'Nos despertamos temprano por la mañana.', en: 'We woke up early in the morning.', note: 'por la mañana in general; de la mañana only with a clock time (las cinco de la mañana)' },
+      { es: 'Fuimos en coche a Provincetown.', en: 'We went to Provincetown by car.', note: 'en coche, NOT en el coche, for "by car"' },
+      { es: 'Tenía miedo de montar la tienda a oscuras.', en: 'I was afraid of setting up the tent in the dark.' },
+      { es: 'Es un cocinero muy famoso.', en: 'He’s a very famous cook.', note: 'muy famoso after the noun, NOT un muy famoso cocinero' },
+      { es: 'Vivimos en Cape Cod.', en: 'We live in Cape Cod.', note: 'no article before a place name' },
+      { es: 'Anoche cenamos en casa.', en: 'Last night we had dinner at home.', note: 'anoche = "last night"; cenar = "to have dinner"' },
+      { es: 'La semana que viene veremos una película sobre un cocinero.', en: 'Next week we’ll watch a movie about a cook.', note: 'la semana que viene = "next week"' },
+      { es: 'Fue un buen fin de semana.', en: 'It was a good weekend.', note: 'fue (preterite of ser), not era — a bounded, finished weekend; fin de semana is masculine (un buen, not una buena)' },
+    ],
+  },
+  {
+    id: 13,
+    weight: 6,
+    name: 'Present perfect and "just did" in live use',
+    sentences: [
+      { es: 'No he salido de mi casa esta semana.', en: 'I haven’t left my house this week.' },
+      { es: 'No he vuelto a viajar a la India.', en: 'I haven’t traveled to India again.' },
+      { es: 'La población ha aumentado mucho.', en: 'The population has increased a lot.' },
+      { es: 'Ha sido un campo de batalla por cincuenta años.', en: 'It has been a battlefield for fifty years.' },
+      { es: 'Mi esposa había leído el libro hacía muchos años.', en: 'My wife had read the book many years before.', note: 'pluperfect (había leído) — completed before another past action' },
+      { es: 'Acabo de llegar, y mi hermano acaba de irse.', en: 'I just arrived, and my brother just left.', note: 'acabar de + infinitive = "to have just done something"' },
+      { es: 'Ya hemos estado en ese parque dos veces.', en: 'We’ve already been to that park twice.' },
+    ],
+  },
+  {
+    id: 14,
+    weight: 5,
+    name: 'Food/meal verbs and word-choice traps',
+    sentences: [
+      { es: 'Salí sin desayunar.', en: 'I left without having breakfast.', note: 'desayuno = breakfast, almuerzo = lunch, cena = dinner' },
+      { es: 'Almorzamos temprano y cenamos en casa.', en: 'We had lunch early and had dinner at home.' },
+      { es: 'Salimos del hotel a las ocho, y volvimos a casa a las seis.', en: 'We left the hotel at eight, and we got back home at six.', note: 'salir = "to leave"; volver = "to return"' },
+      { es: 'Solo intenta descansar.', en: 'Just try to rest.', note: 'solo/simplemente = "just" (only); justo = "exactly"' },
+      { es: 'Intenta relajarte.', en: 'Try to relax.', note: 'affirmative tú command of intentar — no -s ending' },
     ],
   },
 ];

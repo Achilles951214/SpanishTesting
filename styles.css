@@ -76,20 +76,6 @@ button { font-family: inherit; }
   cursor: default;
 }
 
-.meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 14px;
-}
-
-.tag {
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
 .card {
   flex-grow: 1;
   background: var(--card-bg);
@@ -132,8 +118,16 @@ button { font-family: inherit; }
   font-weight: 700;
 }
 
+.tag-reveal {
+  margin: 14px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .note {
-  margin: 10px 0 0;
+  margin: 6px 0 0;
   font-size: 13px;
   font-style: italic;
   color: var(--muted);

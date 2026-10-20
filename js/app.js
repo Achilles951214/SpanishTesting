@@ -1,6 +1,6 @@
 import { createEngine } from './engine.js';
 
-const VERSION = 'v2026.10.13.2';
+const VERSION = 'v2026.10.20';
 const MAX_HISTORY = 50;
 
 const rng = Math.random;
@@ -10,11 +10,11 @@ const el = {
   version: document.getElementById('version'),
   backBtn: document.getElementById('back-btn'),
   pauseBtn: document.getElementById('pause-btn'),
-  tag: document.getElementById('tag'),
   timer: document.getElementById('timer'),
   english: document.getElementById('english-text'),
   spanishBlock: document.getElementById('spanish-block'),
   spanish: document.getElementById('spanish-text'),
+  tagReveal: document.getElementById('tag-text'),
   note: document.getElementById('note-text'),
   hint: document.getElementById('hint-text'),
   actionBtn: document.getElementById('action-btn'),
@@ -42,13 +42,13 @@ function render() {
   const e = entry();
   el.backBtn.disabled = pointer === 0;
 
-  el.tag.textContent = e.card.tag;
   el.english.textContent = e.card.en;
 
   if (e.revealed) {
     el.spanishBlock.classList.remove('hidden');
     el.hint.classList.add('hidden');
     el.spanish.textContent = e.card.es;
+    el.tagReveal.textContent = e.card.tag;
     if (e.card.note) {
       el.note.textContent = e.card.note;
       el.note.classList.remove('hidden');
