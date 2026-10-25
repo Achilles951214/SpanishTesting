@@ -1,6 +1,6 @@
 import { createEngine } from './engine.js';
 
-const VERSION = 'v2026.10.21';
+const VERSION = 'v2026.10.25';
 const MAX_HISTORY = 50;
 
 const rng = Math.random;
