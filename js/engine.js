@@ -1,13 +1,20 @@
 // Picks what to show next: a shuffled "bag" that round-robins through every
-// seed tier exactly once per cycle, plus one procedural slot, so a session
+// seed tier at least once per cycle, plus one procedural slot, so a session
 // reliably sees the full spread of patterns instead of leaning on whichever
-// tiers chance happens to favor. Every tier gets equal footing in the bag —
-// that round-robin guarantee is itself what keeps the currently-flagged
-// priority tiers (1, 9, 10) showing up every cycle, with no extra weighting
-// needed. When the bag empties, it's rebuilt and reshuffled for the next one.
+// tiers chance happens to favor. Every tier is still fully guaranteed every
+// cycle — the weighting below only changes how MANY tickets a tier gets in
+// the shuffle, never whether it shows up. When the bag empties, it's rebuilt
+// and reshuffled for the next one.
 //
+// TIER_TICKETS gives tiers 19-26 (the newest content) extra tickets per
+// cycle, tapering down toward Tier 1, per the user's request to mix all
+// tiers in one shuffled session while leaning toward the most recent errors
+// rather than any one rule. Every tier not listed here (1-18) gets the
+// default of 1 ticket, unchanged from before.
+const TIER_TICKETS = { 26: 4, 25: 4, 24: 3, 23: 3, 22: 3, 21: 3, 20: 2, 19: 2 };
+
 // Flagging a card (app.js's Flag button) adds it as an extra slot in every
-// future bag alongside the 14 tiers, so it repeats roughly once per cycle
+// future bag alongside the seed tiers, so it repeats roughly once per cycle
 // too — a deliberate, in-session-only boost. There's no persistence here:
 // flags live only in this engine instance and vanish on reload.
 import { SEED_TIERS } from './seeds.js';
@@ -42,7 +49,11 @@ export function createEngine(rng) {
   const boosted = []; // cards the user flagged — replayed verbatim, not regenerated
 
   function buildBag() {
-    const slots = SEED_TIERS.map((tier) => ({ kind: 'seed', tier }));
+    const slots = [];
+    for (const tier of SEED_TIERS) {
+      const tickets = TIER_TICKETS[tier.id] || 1;
+      for (let i = 0; i < tickets; i++) slots.push({ kind: 'seed', tier });
+    }
     slots.push({ kind: 'procedural' });
     for (const card of boosted) slots.push({ kind: 'boosted', card });
     return shuffled(slots, rng);
