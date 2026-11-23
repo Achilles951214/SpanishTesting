@@ -8,13 +8,12 @@
 // Tiers mix easy and hard (Tier 6, 9, 11 — subjunctive/reflexive-heavy)
 // content in one pool. engine.js round-robins through every tier at least
 // once per cycle (plus one procedural slot), so a session always sees the
-// full spread rather than leaning on whichever tiers chance favors. Tiers
-// 19-26 (the newest, added for the mid-Nov Duet-chat review) get extra
-// tickets in that same bag so they show up more often than the older tiers,
-// tapering back down toward Tier 1 — see engine.js's TIER_TICKETS for the
-// exact counts. The `weight` field itself is purely descriptive of priority
-// and isn't read by the engine. `note`, where present, is the specific thing
-// to notice — shown after the Spanish is revealed, alongside which
+// full spread rather than leaning on whichever tiers chance favors. A
+// handful of tiers get extra tickets in that same bag, by explicit current
+// priority rather than recency — see engine.js's TIER_TICKETS for the exact
+// counts and what they're based on. The `weight` field itself is purely
+// descriptive of priority and isn't read by the engine. `note`, where
+// present, is the specific thing to notice — shown after the Spanish is revealed, alongside which
 // tier/pattern this was.
 
 export const SEED_TIERS = [
@@ -517,6 +516,161 @@ export const SEED_TIERS = [
       { es: 'Terminaron con un imperio casi por accidente.', en: 'They ended up with an empire almost by accident.', note: 'a completed outcome = preterite (terminaron)' },
       { es: 'Los jueces juran ante el Bhagavad Gita en la ceremonia de juramento.', en: 'The judges swear on the Bhagavad Gita at the swearing-in ceremony.', note: 'ceremonia de juramento needs de' },
       { es: 'Los europeos tenían mejores armas que los mogoles.', en: 'The Europeans had better weapons than the Mughals.' },
+    ],
+  },
+  {
+    id: 27, weight: 10, name: 'Third-person verb for "I", and subject switches',
+    sentences: [
+      { es: 'Hace dos días visité Las Vegas para una conferencia.', en: 'Two days ago I visited Las Vegas for a conference.', note: 'visité, NOT visitó' },
+      { es: 'Mi hija toca el violonchelo desde hace cinco años, y yo toco la guitarra desde hace muchos años.', en: "My daughter has played cello for five years, and I've played guitar for many years." },
+      { es: 'Empecé a tocar la guitarra cuando tenía catorce años.', en: 'I started playing guitar when I was fourteen.', note: 'empecé... tenía, NOT empezó... tiene' },
+      { es: 'Al principio tenía un profesor de guitarra, y después de tres años aprendí solo.', en: 'At first I had a guitar teacher, and after three years I learned on my own.' },
+      { es: 'Fui solo a Harvard en bicicleta.', en: 'I went to Harvard alone by bike.', note: 'fui solo, NOT fue solo' },
+      { es: 'Mi hija cantó una canción famosa, y yo toqué la guitarra.', en: 'My daughter sang a famous song, and I played the guitar.' },
+      { es: 'Ella se levantó tarde, pero yo me levanté temprano.', en: 'She got up late, but I got up early.' },
+      { es: 'Tim comió un sándwich de langosta y yo comí un taco.', en: 'Tim ate a lobster sandwich and I ate a taco.' },
+      { es: 'Mi esposa vino a la charla, pero yo fui en bicicleta.', en: 'My wife came to the talk, but I went by bike.' },
+      { es: 'Mi hija aprendió el violín, y yo aprendí la guitarra.', en: 'My daughter learned violin, and I learned guitar.' },
+    ],
+  },
+  {
+    id: 28, weight: 10, name: 'Por vs. para',
+    sentences: [
+      { es: 'El primer día fue difícil para Milo.', en: 'The first day was hard for Milo.', note: 'para Milo, NOT por Milo' },
+      { es: 'Quiero una mesa para cuatro personas.', en: 'I want a table for four people.', note: 'para, NOT por' },
+      { es: 'Para las otras dos personas, dos cervezas, por favor.', en: 'For the other two people, two beers, please.' },
+      { es: 'No tengo mucho tiempo para la música.', en: "I don't have much time for music.", note: 'para la música, NOT por la música' },
+      { es: 'Necesitamos dos minutos para ver el menú.', en: 'We need two minutes to look at the menu.' },
+      { es: 'La ciudad es muy famosa por el juego.', en: 'The city is very famous for gambling.', note: 'cause/reason = por' },
+      { es: 'Ese día hacía mucho calor, y por eso teníamos sed.', en: "That day it was very hot, and that's why we were thirsty." },
+      { es: 'Gracias por la actuación maravillosa.', en: 'Thanks for the wonderful performance.' },
+      { es: 'Esto es para ti.', en: 'This is for you.' },
+      { es: 'Corrí por el parque.', en: 'I ran through the park.', note: 'through a place = por' },
+      { es: 'Corrí cuatro millas.', en: 'I ran four miles.', note: 'no preposition for distance' },
+    ],
+  },
+  {
+    id: 29, weight: 10, name: '"No" before the verb, "de" after prepositions, contractions, ser/estar',
+    sentences: [
+      { es: 'Harvard no está muy lejos de mi casa.', en: "Harvard isn't very far from my house.", note: 'no está, NOT es no' },
+      { es: 'No tengo mucho tiempo.', en: "I don't have much time.", note: 'no tengo, NOT tengo no' },
+      { es: 'La inteligencia artificial no reemplaza la creatividad humana.', en: "Artificial intelligence doesn't replace human creativity." },
+      { es: 'No me dormí en el avión, pero practiqué español.', en: "I didn't fall asleep on the plane, but I practiced Spanish." },
+      { es: 'Después de tres años, aprendí solo.', en: 'After three years, I learned on my own.', note: 'después de, NOT después tres años' },
+      { es: 'Está a unas tres millas de mi casa.', en: "It's about three miles from my house.", note: 'a... de, NOT cerca tres millas' },
+      { es: 'Me vestí para ir al aeropuerto.', en: 'I got dressed to go to the airport.', note: 'al aeropuerto, NOT a el aeropuerto' },
+      { es: 'Después del café, me duché.', en: 'After coffee, I showered.' },
+      { es: 'Voy al hotel.', en: "I'm going to the hotel.", note: 'al, del — contractions of a/de + el' },
+      { es: 'La comida está muy sabrosa.', en: 'The food is very tasty.', note: 'taste = estar, NOT es' },
+      { es: 'Practiqué español durante el viaje.', en: 'I practiced Spanish during the trip.' },
+      { es: 'Practiqué mientras viajaba.', en: 'I practiced while I was traveling.', note: 'durante + noun, mientras + verb' },
+      { es: 'Elijamos hablar en pasado y usemos los reflexivos.', en: "Let's choose to speak in the past and use reflexives." },
+      { es: 'Practiquemos español.', en: "Let's practice Spanish.", note: 'nosotros commands' },
+    ],
+  },
+  {
+    id: 30, weight: 10, name: 'Restaurant script (usted with the server)',
+    sentences: [
+      { es: 'Buenas noches. Quiero una mesa para cuatro personas, por favor.', en: "Good evening. I'd like a table for four people, please." },
+      { es: '¿Puede repetir, por favor?', en: 'Can you repeat that, please?' },
+      { es: '¿Nos puede traer el menú?', en: 'Can you bring us the menu?' },
+      { es: 'Para mí, agua con hielo, y para mi hija, una Coca-Cola.', en: 'For me, water with ice, and for my daughter, a Coke.' },
+      { es: 'Para las otras dos personas, dos cervezas, por favor.', en: 'For the other two people, two beers, please.' },
+      { es: 'Necesitamos dos minutos para ver el menú.', en: 'We need two minutes to look at the menu.' },
+      { es: 'Yo quiero un burrito, y mi esposa quiere una quesadilla.', en: 'I want a burrito, and my wife wants a quesadilla.' },
+      { es: 'Mi hija mayor quiere enchiladas y chiles rellenos.', en: 'My older daughter wants enchiladas and stuffed peppers.', note: 'rellenos = stuffed; rehenes = hostages' },
+      { es: 'Guacamole con totopos estaría muy bien.', en: 'Guacamole with chips would be great.' },
+      { es: '¿Tienen flan o pastel de tres leches?', en: 'Do you have flan or tres leches cake?' },
+      { es: 'Nada más por ahora, gracias.', en: 'Nothing else for now, thanks.' },
+      { es: '¿Me trae la cuenta, por favor?', en: 'Can you bring me the check, please?' },
+      { es: 'Pago con tarjeta.', en: "I'm paying by card." },
+      { es: 'La comida está muy sabrosa.', en: 'The food is very tasty.' },
+      { es: 'Gracias, igualmente.', en: 'Thanks, same to you.' },
+    ],
+  },
+  {
+    id: 31, weight: 10, name: 'Corrected-sentence bank, sessions 6-10',
+    sentences: [
+      { es: 'Quiero hablar de una charla a la que asistí.', en: 'I want to talk about a talk I attended.' },
+      { es: 'La organizó una librería local que se llama Harvard Book Store.', en: 'It was organized by a local bookstore called Harvard Book Store.' },
+      { es: 'Lo que me pareció más interesante fue la discusión sobre la inteligencia humana frente a la inteligencia artificial.', en: 'What I found most interesting was the discussion of human intelligence versus artificial intelligence.' },
+      { es: 'Terence cree que las soluciones no son tan importantes.', en: "Terence believes that solutions aren't as important." },
+      { es: 'Había una fila muy larga.', en: 'There was a very long line.' },
+      { es: 'Asistieron casi doscientas personas.', en: 'Almost two hundred people attended.' },
+      { es: 'Fui solo a Harvard en bicicleta.', en: 'I went to Harvard alone by bike.' },
+      { es: 'Me gusta mucho ir en bicicleta.', en: 'I really like going by bike.' },
+      { es: 'Hace dos días visité Las Vegas para una conferencia.', en: 'Two days ago I visited Las Vegas for a conference.' },
+      { es: 'El tema es Las Vegas.', en: 'The topic is Las Vegas.' },
+      { es: 'Es una ciudad basada en el exceso.', en: "It's a city based on excess." },
+      { es: 'Anteayer vi un espectáculo de magia.', en: 'The day before yesterday I saw a magic show.' },
+      { es: 'Al público le gustaron mucho los trucos.', en: 'The audience really liked the tricks.' },
+      { es: 'Creo que antes del espectáculo el mago buscó datos sobre las personas.', en: 'I think before the show the magician looked up information about the people.' },
+      { es: 'La señora estaba muy sorprendida.', en: 'The woman was very surprised.' },
+      { es: 'Fue muy divertido, pero estaba muy cansado, así que salí temprano y volví al hotel.', en: 'It was a lot of fun, but I was very tired, so I left early and went back to the hotel.' },
+      { es: 'Me desperté a las siete y luego corrí cuatro millas.', en: 'I woke up at seven and then ran four miles.' },
+      { es: 'Me vestí para ir al aeropuerto.', en: 'I got dressed to go to the airport.' },
+      { es: 'No me dormí en el avión, pero practiqué español durante el viaje.', en: "I didn't fall asleep on the plane, but I practiced Spanish during the trip." },
+      { es: 'Toca el violonchelo desde hace cinco años.', en: "She's played the cello for five years." },
+      { es: 'Para tocar juntos, cantamos canciones de los Beatles.', en: 'To play together, we sing Beatles songs.' },
+      { es: 'Antes practicaba todos los días, pero ahora no tengo mucho tiempo para la música.', en: "Before I used to practice every day, but now I don't have much time for music." },
+    ],
+  },
+  {
+    id: 32, weight: 10, name: "Victor, Nov 20-21: small slips that keep repeating, plus new constructions",
+    sentences: [
+      { es: 'Solo resuelve unas pocas pruebas.', en: 'It only solves a few proofs.', note: 'unas pocas, NOT una pocas' },
+      { es: 'Es una nueva frontera para las matemáticas.', en: "It's a new frontier for mathematics.", note: 'las matemáticas, plural' },
+      { es: 'Los matemáticos no son muy populares en las fiestas.', en: "Mathematicians aren't very popular at parties.", note: 'plural agreement' },
+      { es: 'Los ganadores del premio Nobel dieron la charla.', en: 'The Nobel Prize winners gave the talk.', note: 'del, with the article' },
+      { es: 'Hace veinte años estuve en Las Vegas.', en: 'Twenty years ago I was in Las Vegas.' },
+      { es: 'No había estado en Las Vegas en veinte años.', en: "I hadn't been to Las Vegas in twenty years." },
+      { es: 'La inteligencia artificial resolvió una prueba matemática muy famosa.', en: 'Artificial intelligence solved a very famous math proof.' },
+      { es: 'Podrían hacer nuevos descubrimientos.', en: 'They might make new discoveries.', note: 'conditional' },
+      { es: 'Cuando le preguntan a qué se dedica, la conversación termina.', en: 'When they ask him what he does for a living, the conversation ends.' },
+      { es: 'No había espacio para asientos, así que todos estábamos parados.', en: 'There was no room for seats, so we were all standing.' },
+      { es: 'La fila para recibir el autógrafo era demasiado larga.', en: 'The line to get the autograph was too long.' },
+      { es: 'Mucha gente cree que las matemáticas no tienen límite.', en: 'Many people believe math has no limit.', note: 'creo, crees, cree, creemos, creen' },
+      { es: 'La charla tuvo lugar en Harvard.', en: 'The talk took place at Harvard.', note: 'tener lugar, not tomar lugar' },
+    ],
+  },
+  {
+    id: 33, weight: 10, name: 'Future vs. conditional',
+    sentences: [
+      { es: 'El miércoles tendré una reunión de inversiones.', en: "On Wednesday I'll have an investment meeting.", note: 'future' },
+      { es: 'Mañana iré a Harvard en bicicleta.', en: "Tomorrow I'll go to Harvard by bike." },
+      { es: 'Si hace frío mañana, llevaré abrigo.', en: "If it's cold tomorrow, I'll wear a coat." },
+      { es: 'Creo que llegaré tarde.', en: "I think I'll arrive late." },
+      { es: 'Seguramente estará en casa.', en: "He's probably home.", note: 'future of probability' },
+      { es: 'Dijo que llegaría tarde.', en: 'She said she would arrive late.', note: 'future in the past' },
+      { es: 'Me dijo que vendría a las seis.', en: 'She told me she would come at six.' },
+      { es: 'Me gustaría aprender más.', en: 'I would like to learn more.', note: 'polite or hypothetical' },
+      { es: 'Podrían hacer nuevos descubrimientos.', en: 'They might make new discoveries.' },
+      { es: 'Si tuviera más tiempo, viajaría más.', en: 'If I had more time, I would travel more.', note: 'hypothetical' },
+      { es: 'Asistieron casi doscientas personas.', en: 'Almost two hundred people attended.', note: 'NOT asistirían; the event happened, so preterite' },
+      { es: 'La cervecería tenía muchos camiones.', en: 'The brewery had a lot of trucks.', note: 'NOT invitaría' },
+      { es: 'El año que viene tendrá que elegir una escuela.', en: "Next year she'll have to choose a school." },
+      { es: '¿Qué harás el sábado?', en: 'What will you do on Saturday?' },
+      { es: '¿Qué harías si ganaras la lotería?', en: 'What would you do if you won the lottery?' },
+      { es: 'Saldremos a las ocho y volveremos temprano.', en: "We'll leave at eight and come back early." },
+      { es: 'Dijeron que saldrían a las ocho.', en: 'They said they would leave at eight.' },
+      { es: 'Habrá mucha gente en la charla.', en: 'There will be a lot of people at the talk.' },
+      { es: 'Dijeron que habría mucha gente.', en: 'They said there would be a lot of people.', note: 'haber: hay → habrá, había → habría' },
+    ],
+  },
+  {
+    id: 34, weight: 10, name: 'Hay / había (existence) and intentar / tratar',
+    sentences: [
+      { es: 'Hay muchas bailarinas en el espectáculo.', en: 'There are many dancers in the show.', note: 'hay, NOT es muchas bailarinas' },
+      { es: 'Había una fila muy larga.', en: 'There was a very long line.', note: 'había, NOT no está una línea' },
+      { es: 'En este coro hay niños y personas mayores.', en: 'In this choir there are children and older people.', note: 'hay, NOT son hijas, son niños' },
+      { es: 'No había espacio para asientos.', en: 'There was no room for seats.' },
+      { es: 'Había cinco edificios en el campus.', en: 'There were five buildings on campus.' },
+      { es: 'Hay un restaurante cerca de mi casa.', en: "There's a restaurant near my house." },
+      { es: 'Va a haber mucha gente mañana.', en: "There's going to be a lot of people tomorrow." },
+      { es: 'Intento / Trato de entender la situación.', en: 'I try to understand the situation.', note: "both mean 'try to'; tratar needs de" },
+      { es: 'Se trata de un libro sobre las matemáticas.', en: "It's about a book on mathematics.", note: "it's about" },
+      { es: 'Trato bien a mis colegas.', en: 'I treat my colleagues well.', note: 'I treat' },
+      { es: 'Probé el flan.', en: 'I tried/tasted the flan.', note: 'for food and things, probar' },
     ],
   },
 ];

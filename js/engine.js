@@ -6,12 +6,22 @@
 // the shuffle, never whether it shows up. When the bag empties, it's rebuilt
 // and reshuffled for the next one.
 //
-// TIER_TICKETS gives tiers 19-26 (the newest content) extra tickets per
-// cycle, tapering down toward Tier 1, per the user's request to mix all
-// tiers in one shuffled session while leaning toward the most recent errors
-// rather than any one rule. Every tier not listed here (1-18) gets the
-// default of 1 ticket, unchanged from before.
-const TIER_TICKETS = { 26: 4, 25: 4, 24: 3, 23: 3, 22: 3, 21: 3, 20: 2, 19: 2 };
+// TIER_TICKETS follows the explicit priority order from the 22 Nov seed
+// list update (highest first): Tier 27/22 (verb matches the subject),
+// Tier 21 (preterite vs. subjunctive endings), Tier 33 (future vs.
+// conditional), Tier 19/15 (reflexive and object pronouns), Tier 28/29
+// (por/para, "no" before the verb, de, ser/estar), Tier 34 (hay/había),
+// then the sentence banks (23, 31) and everything else at the default of
+// 1 ticket. This fully replaces the earlier recency-based weighting —
+// priorities move as old errors get fixed and new ones show up.
+const TIER_TICKETS = {
+  27: 6, 22: 6,
+  21: 5,
+  33: 4,
+  19: 3, 15: 3,
+  28: 2, 29: 2,
+  34: 2,
+};
 
 // Flagging a card (app.js's Flag button) adds it as an extra slot in every
 // future bag alongside the seed tiers, so it repeats roughly once per cycle
