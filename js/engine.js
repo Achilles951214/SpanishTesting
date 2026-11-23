@@ -25,8 +25,12 @@ const TIER_TICKETS = {
 
 // Flagging a card (app.js's Flag button) adds it as an extra slot in every
 // future bag alongside the seed tiers, so it repeats roughly once per cycle
-// too — a deliberate, in-session-only boost. There's no persistence here:
-// flags live only in this engine instance and vanish on reload.
+// too — a deliberate, in-session-only boost. Demoting a card (app.js's "Got
+// it" button) is the opposite: it's excluded from its tier's draw pool for
+// the rest of the session, so it stops coming up without needing to be
+// deleted from seeds.js. A card can't be both — setting one clears the
+// other. There's no persistence here: flags and demotions live only in this
+// engine instance and vanish on reload.
 import { SEED_TIERS } from './seeds.js';
 import { PRETERITE_FOCUS_VERBS } from './verbs.js';
 import { startSimple, buildSimpleSentence, startComplex, buildComplexSentence } from './sentences.js';
@@ -54,9 +58,10 @@ function biasedStartSimple(rng) {
 
 export function createEngine(rng) {
   let bag = [];
-  const lastSeedIndex = {}; // tier id -> last sentence index shown, to avoid an immediate repeat
+  const lastSeedEs = {}; // tier id -> es text last shown, to avoid an immediate repeat
   let lastProcVerb = null;
   const boosted = []; // cards the user flagged — replayed verbatim, not regenerated
+  const excluded = new Set(); // es text of cards the user demoted — skipped when drawing their tier
 
   function buildBag() {
     const slots = [];
@@ -70,13 +75,17 @@ export function createEngine(rng) {
   }
 
   function drawSeed(tier) {
-    const sentences = tier.sentences;
-    let index = Math.floor(rng() * sentences.length);
-    if (sentences.length > 1) {
-      while (index === lastSeedIndex[tier.id]) index = Math.floor(rng() * sentences.length);
+    const available = tier.sentences.filter((s) => !excluded.has(s.es));
+    // If every sentence in this tier got demoted, fall back to the full set
+    // rather than locking the tier out entirely.
+    const pool = available.length > 0 ? available : tier.sentences;
+    let candidates = pool;
+    if (pool.length > 1) {
+      const withoutLast = pool.filter((s) => s.es !== lastSeedEs[tier.id]);
+      if (withoutLast.length > 0) candidates = withoutLast;
     }
-    lastSeedIndex[tier.id] = index;
-    const item = sentences[index];
+    const item = candidates[Math.floor(rng() * candidates.length)];
+    lastSeedEs[tier.id] = item.es;
     return { es: item.es, en: item.en, note: item.note, tag: `Tier ${tier.id} · ${tier.name}` };
   }
 
@@ -103,9 +112,25 @@ export function createEngine(rng) {
 
     setFlag(card, flagged) {
       const index = boosted.findIndex((c) => c.es === card.es);
-      if (flagged && index === -1) boosted.push(card);
-      if (!flagged && index !== -1) boosted.splice(index, 1);
+      if (flagged) {
+        excluded.delete(card.es);
+        if (index === -1) boosted.push(card);
+      } else if (index !== -1) {
+        boosted.splice(index, 1);
+      }
       // Mid-cycle flags join the very next bag, not retroactively this one.
+    },
+
+    setDemoted(card, demoted) {
+      if (demoted) {
+        excluded.add(card.es);
+        const index = boosted.findIndex((c) => c.es === card.es);
+        if (index !== -1) boosted.splice(index, 1);
+      } else {
+        excluded.delete(card.es);
+      }
+      // Already-built bags may still hold a stale ticket for this tier;
+      // the exclusion applies from the next time that tier is actually drawn.
     },
   };
 }

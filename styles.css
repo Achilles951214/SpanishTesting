@@ -11,6 +11,9 @@
   --flag-bg: #FBF1E4;
   --flag-border: #E3C19A;
   --flag-text: #9A5B14;
+  --demote-bg: #E6F0EC;
+  --demote-border: #9FC4B8;
+  --demote-text: #1F5245;
 }
 
 * { box-sizing: border-box; }
@@ -125,6 +128,7 @@ button { font-family: inherit; }
   margin-top: 14px;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 10px;
 }
@@ -132,13 +136,20 @@ button { font-family: inherit; }
 .tag-reveal {
   margin: 0;
   flex: 1;
+  min-width: 100%;
   font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
-.flag-btn {
+.card-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.flag-btn, .demote-btn {
   flex-shrink: 0;
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -154,6 +165,13 @@ button { font-family: inherit; }
   border-color: var(--flag-border);
   background: var(--flag-bg);
   color: var(--flag-text);
+  font-weight: 700;
+}
+
+.demote-btn.demoted {
+  border-color: var(--demote-border);
+  background: var(--demote-bg);
+  color: var(--demote-text);
   font-weight: 700;
 }
 
@@ -239,6 +257,9 @@ button { font-family: inherit; }
     --flag-bg: #2E2416;
     --flag-border: #5A4320;
     --flag-text: #D9A969;
+    --demote-bg: #16271F;
+    --demote-border: #2F5245;
+    --demote-text: #7FC7AC;
   }
   .prompt-card { background: var(--card-bg); }
 }
