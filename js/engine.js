@@ -6,14 +6,14 @@
 // the shuffle, never whether it shows up. When the bag empties, it's rebuilt
 // and reshuffled for the next one.
 //
-// TIER_TICKETS follows the explicit priority order from the 22 Nov seed
-// list update (highest first): Tier 27/22 (verb matches the subject),
+// TIER_TICKETS follows the "Why these tiers" priority order from the 25 Nov
+// Active seed deck (highest first): Tier 27/22 (verb matches the subject),
 // Tier 21 (preterite vs. subjunctive endings), Tier 33 (future vs.
 // conditional), Tier 19/15 (reflexive and object pronouns), Tier 28/29
-// (por/para, "no" before the verb, de, ser/estar), Tier 34 (hay/había),
-// then the sentence banks (23, 31) and everything else at the default of
-// 1 ticket. This fully replaces the earlier recency-based weighting —
-// priorities move as old errors get fixed and new ones show up.
+// (por/para, "no" before the verb, de, ser/estar), then Tier 34 (hay/había)
+// lowest. Any tier not listed here (none currently) would fall back to the
+// default of 1 ticket. Update this whenever seeds.js swaps in a different
+// active deck.
 const TIER_TICKETS = {
   27: 6, 22: 6,
   21: 5,
