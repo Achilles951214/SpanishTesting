@@ -17,6 +17,7 @@
     <div class="title-block">
       <h1>Conjuga</h1>
       <span id="version" class="version"></span>
+      <span id="progress" class="progress"></span>
     </div>
     <div class="header-controls">
       <button id="back-btn" class="icon-btn" aria-label="Back to previous sentence" disabled>Back</button>
@@ -39,7 +40,6 @@
       <div class="tag-row">
         <p id="tag-text" class="tag-reveal"></p>
         <div class="card-actions">
-          <button id="demote-btn" class="demote-btn">Got it</button>
           <button id="flag-btn" class="flag-btn">Flag to repeat</button>
         </div>
       </div>
@@ -55,6 +55,14 @@
       <div class="prompt-title">Paused</div>
       <p class="prompt-body">Take your time. Tap resume when you're ready to keep going.</p>
       <button id="resume-btn" class="primary-btn">Resume</button>
+    </div>
+  </div>
+
+  <div id="complete-overlay" class="overlay hidden">
+    <div class="prompt-card">
+      <div class="prompt-title">Deck complete</div>
+      <p id="complete-body" class="prompt-body"></p>
+      <button id="restart-btn" class="primary-btn">Restart deck</button>
     </div>
   </div>
 

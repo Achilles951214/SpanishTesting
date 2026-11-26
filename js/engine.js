@@ -1,39 +1,10 @@
-// Picks what to show next: a shuffled "bag" that round-robins through every
-// seed tier at least once per cycle, plus one procedural slot, so a session
-// reliably sees the full spread of patterns instead of leaning on whichever
-// tiers chance happens to favor. Every tier is still fully guaranteed every
-// cycle — the weighting below only changes how MANY tickets a tier gets in
-// the shuffle, never whether it shows up. When the bag empties, it's rebuilt
-// and reshuffled for the next one.
-//
-// TIER_TICKETS follows the "Why these tiers" priority order from the 25 Nov
-// Active seed deck (highest first): Tier 27/22 (verb matches the subject),
-// Tier 21 (preterite vs. subjunctive endings), Tier 33 (future vs.
-// conditional), Tier 19/15 (reflexive and object pronouns), Tier 28/29
-// (por/para, "no" before the verb, de, ser/estar), then Tier 34 (hay/había)
-// lowest. Any tier not listed here (none currently) would fall back to the
-// default of 1 ticket. Update this whenever seeds.js swaps in a different
-// active deck.
-const TIER_TICKETS = {
-  27: 6, 22: 6,
-  21: 5,
-  33: 4,
-  19: 3, 15: 3,
-  28: 2, 29: 2,
-  34: 2,
-};
-
-// Flagging a card (app.js's Flag button) adds it as an extra slot in every
-// future bag alongside the seed tiers, so it repeats roughly once per cycle
-// too — a deliberate, in-session-only boost. Demoting a card (app.js's "Got
-// it" button) is the opposite: it's excluded from its tier's draw pool for
-// the rest of the session, so it stops coming up without needing to be
-// deleted from seeds.js. A card can't be both — setting one clears the
-// other. There's no persistence here: flags and demotions live only in this
-// engine instance and vanish on reload.
-import { SEED_TIERS } from './seeds.js';
-import { PRETERITE_FOCUS_VERBS } from './verbs.js';
-import { startSimple, buildSimpleSentence, startComplex, buildComplexSentence } from './sentences.js';
+// A fixed 100-sentence test deck, shuffled once per session and walked
+// through in order — no procedural generation, no tier-ticket weighting.
+// Each of the 100 is shown exactly once. The only thing that repeats is a
+// card the user flags: once the deck is exhausted, flagged cards cycle
+// round-robin (shuffled among themselves) for as long as any stay flagged.
+// Unflagging a card drops it from that rotation immediately.
+import { TEST_DECK, TIER_KEY } from './seeds.js';
 
 function shuffled(arr, rng) {
   const copy = arr.slice();
@@ -44,93 +15,64 @@ function shuffled(arr, rng) {
   return copy;
 }
 
-// Tier 1 (preterite person-agreement) is the top-flagged error — nudge the
-// procedural generator toward its verb list too, not just the seed bank.
-function biasedStartSimple(rng) {
-  if (rng() < 0.35) {
-    for (let i = 0; i < 6; i++) {
-      const candidate = startSimple(rng);
-      if (PRETERITE_FOCUS_VERBS.includes(candidate.verbInfinitive)) return candidate;
-    }
+function formatTag(tiers) {
+  const labels = [];
+  for (const t of tiers) {
+    const label = TIER_KEY[t];
+    if (label && !labels.includes(label)) labels.push(label);
   }
-  return startSimple(rng);
+  const word = tiers.length > 1 ? 'Tiers' : 'Tier';
+  const nums = tiers.join(', ');
+  return labels.length > 0 ? `${word} ${nums} · ${labels.join(', ')}` : `${word} ${nums}`;
+}
+
+function cardFor(item, flagged) {
+  return { es: item.es, en: item.en, note: item.note, tag: formatTag(item.tiers), flagged };
 }
 
 export function createEngine(rng) {
-  let bag = [];
-  const lastSeedEs = {}; // tier id -> es text last shown, to avoid an immediate repeat
-  let lastProcVerb = null;
-  const boosted = []; // cards the user flagged — replayed verbatim, not regenerated
-  const excluded = new Set(); // es text of cards the user demoted — skipped when drawing their tier
-
-  function buildBag() {
-    const slots = [];
-    for (const tier of SEED_TIERS) {
-      const tickets = TIER_TICKETS[tier.id] || 1;
-      for (let i = 0; i < tickets; i++) slots.push({ kind: 'seed', tier });
-    }
-    slots.push({ kind: 'procedural' });
-    for (const card of boosted) slots.push({ kind: 'boosted', card });
-    return shuffled(slots, rng);
-  }
-
-  function drawSeed(tier) {
-    const available = tier.sentences.filter((s) => !excluded.has(s.es));
-    // If every sentence in this tier got demoted, fall back to the full set
-    // rather than locking the tier out entirely.
-    const pool = available.length > 0 ? available : tier.sentences;
-    let candidates = pool;
-    if (pool.length > 1) {
-      const withoutLast = pool.filter((s) => s.es !== lastSeedEs[tier.id]);
-      if (withoutLast.length > 0) candidates = withoutLast;
-    }
-    const item = candidates[Math.floor(rng() * candidates.length)];
-    lastSeedEs[tier.id] = item.es;
-    return { es: item.es, en: item.en, note: item.note, tag: `Tier ${tier.id} · ${tier.name}` };
-  }
-
-  function drawProcedural() {
-    const useSimple = rng() < 0.5;
-    let state = useSimple ? biasedStartSimple(rng) : startComplex(rng);
-    let verbKey = useSimple ? state.verbInfinitive : state.verb2Infinitive;
-    if (verbKey === lastProcVerb) {
-      state = useSimple ? biasedStartSimple(rng) : startComplex(rng);
-      verbKey = useSimple ? state.verbInfinitive : state.verb2Infinitive;
-    }
-    lastProcVerb = verbKey;
-    return useSimple ? buildSimpleSentence(state) : buildComplexSentence(state);
-  }
+  const deck = shuffled(TEST_DECK, rng);
+  const total = deck.length;
+  let deckPointer = 0; // how many of the 100 have been drawn so far
+  const flagged = []; // TEST_DECK items currently flagged, cycled once the deck is done
+  let flagPointer = 0;
 
   return {
+    total,
+
+    // Returns a card, or null when there's nothing left to show (the deck
+    // is done and nothing is currently flagged).
     draw() {
-      if (bag.length === 0) bag = buildBag();
-      const slot = bag.pop();
-      if (slot.kind === 'seed') return drawSeed(slot.tier);
-      if (slot.kind === 'procedural') return drawProcedural();
-      return slot.card;
+      if (deckPointer < total) {
+        const item = deck[deckPointer];
+        deckPointer += 1;
+        return cardFor(item, false);
+      }
+      if (flagged.length === 0) return null;
+      const item = flagged[flagPointer % flagged.length];
+      flagPointer += 1;
+      return cardFor(item, true);
     },
 
-    setFlag(card, flagged) {
-      const index = boosted.findIndex((c) => c.es === card.es);
-      if (flagged) {
-        excluded.delete(card.es);
-        if (index === -1) boosted.push(card);
-      } else if (index !== -1) {
-        boosted.splice(index, 1);
-      }
-      // Mid-cycle flags join the very next bag, not retroactively this one.
+    // { shown, total, reviewingFlagged, flaggedCount } — shown is capped at
+    // total, since cards shown during flagged-review don't advance the count.
+    progress() {
+      return {
+        shown: Math.min(deckPointer, total),
+        total,
+        reviewingFlagged: deckPointer >= total,
+        flaggedCount: flagged.length,
+      };
     },
 
-    setDemoted(card, demoted) {
-      if (demoted) {
-        excluded.add(card.es);
-        const index = boosted.findIndex((c) => c.es === card.es);
-        if (index !== -1) boosted.splice(index, 1);
-      } else {
-        excluded.delete(card.es);
+    setFlag(card, isFlagged) {
+      const index = flagged.findIndex((item) => item.es === card.es);
+      if (isFlagged && index === -1) {
+        const item = TEST_DECK.find((it) => it.es === card.es);
+        if (item) flagged.push(item);
+      } else if (!isFlagged && index !== -1) {
+        flagged.splice(index, 1);
       }
-      // Already-built bags may still hold a stale ticket for this tier;
-      // the exclusion applies from the next time that tier is actually drawn.
     },
   };
 }
