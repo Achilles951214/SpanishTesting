@@ -1,10 +1,15 @@
-// A fixed 100-sentence test deck, shuffled once per session and walked
-// through in order — no procedural generation, no tier-ticket weighting.
-// Each of the 100 is shown exactly once. The only thing that repeats is a
-// card the user flags: once the deck is exhausted, flagged cards cycle
-// round-robin (shuffled among themselves) for as long as any stay flagged.
-// Unflagging a card drops it from that rotation immediately.
-import { TEST_DECK, TIER_KEY } from './seeds.js';
+// Drives a single chunk (a slice of TEST_DECK, 25 items) — shuffled once and
+// walked through in order, no procedural generation, no tier-ticket
+// weighting. Each item is shown exactly once. The only thing that repeats
+// is a card the user flags: once the chunk is exhausted, flagged cards
+// cycle round-robin (shuffled among themselves) for as long as any stay
+// flagged. Unflagging a card drops it from that rotation immediately.
+//
+// Cards are matched by their stable `n` (sentence number), not by text, so
+// state can be serialized to plain numbers via getState() and handed back
+// via the `initialState` param to resume a chunk exactly where it left off
+// (app.js persists this to localStorage after every draw/flag).
+import { TIER_KEY } from './seeds.js';
 
 function shuffled(arr, rng) {
   const copy = arr.slice();
@@ -27,29 +32,43 @@ function formatTag(tiers) {
 }
 
 function cardFor(item, flagged) {
-  return { es: item.es, en: item.en, note: item.note, tag: formatTag(item.tiers), flagged };
+  return { n: item.n, es: item.es, en: item.en, note: item.note, tag: formatTag(item.tiers), flagged };
 }
 
-export function createEngine(rng) {
-  const deck = shuffled(TEST_DECK, rng);
-  const total = deck.length;
-  let deckPointer = 0; // how many of the 100 have been drawn so far
-  const flagged = []; // TEST_DECK items currently flagged, cycled once the deck is done
-  let flagPointer = 0;
+export function createEngine(rng, items, initialState) {
+  const total = items.length;
+  const byN = new Map(items.map((item) => [item.n, item]));
+
+  let order; // item.n values, in draw order
+  let deckPointer;
+  let flaggedNs; // item.n values currently flagged
+  let flagPointer;
+
+  if (initialState) {
+    order = initialState.order.slice();
+    deckPointer = initialState.deckPointer;
+    flaggedNs = initialState.flaggedNs.slice();
+    flagPointer = initialState.flagPointer || 0;
+  } else {
+    order = shuffled(items, rng).map((item) => item.n);
+    deckPointer = 0;
+    flaggedNs = [];
+    flagPointer = 0;
+  }
 
   return {
     total,
 
-    // Returns a card, or null when there's nothing left to show (the deck
+    // Returns a card, or null when there's nothing left to show (the chunk
     // is done and nothing is currently flagged).
     draw() {
       if (deckPointer < total) {
-        const item = deck[deckPointer];
+        const item = byN.get(order[deckPointer]);
         deckPointer += 1;
         return cardFor(item, false);
       }
-      if (flagged.length === 0) return null;
-      const item = flagged[flagPointer % flagged.length];
+      if (flaggedNs.length === 0) return null;
+      const item = byN.get(flaggedNs[flagPointer % flaggedNs.length]);
       flagPointer += 1;
       return cardFor(item, true);
     },
@@ -61,18 +80,18 @@ export function createEngine(rng) {
         shown: Math.min(deckPointer, total),
         total,
         reviewingFlagged: deckPointer >= total,
-        flaggedCount: flagged.length,
+        flaggedCount: flaggedNs.length,
       };
     },
 
     setFlag(card, isFlagged) {
-      const index = flagged.findIndex((item) => item.es === card.es);
-      if (isFlagged && index === -1) {
-        const item = TEST_DECK.find((it) => it.es === card.es);
-        if (item) flagged.push(item);
-      } else if (!isFlagged && index !== -1) {
-        flagged.splice(index, 1);
-      }
+      const index = flaggedNs.indexOf(card.n);
+      if (isFlagged && index === -1) flaggedNs.push(card.n);
+      else if (!isFlagged && index !== -1) flaggedNs.splice(index, 1);
+    },
+
+    getState() {
+      return { order: order.slice(), deckPointer, flaggedNs: flaggedNs.slice(), flagPointer };
     },
   };
 }

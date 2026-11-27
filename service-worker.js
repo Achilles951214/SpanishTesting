@@ -1,4 +1,4 @@
-const CACHE_NAME = 'conjuga-v12';
+const CACHE_NAME = 'conjuga-v13';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   './js/app.js',
   './js/engine.js',
   './js/seeds.js',
+  './js/storage.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
 ];

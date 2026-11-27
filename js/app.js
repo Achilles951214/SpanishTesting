@@ -1,14 +1,27 @@
 import { createEngine } from './engine.js';
+import { TEST_DECK } from './seeds.js';
+import { loadChunk, saveChunk, clearChunk } from './storage.js';
 
-const VERSION = 'v2026.11.26';
+const VERSION = 'v2026.11.27';
 const MAX_HISTORY = 50;
+const CHUNK_SIZE = 25;
 
 const rng = Math.random;
-let engine = createEngine(rng);
+
+const CHUNKS = [];
+for (let i = 0; i < TEST_DECK.length; i += CHUNK_SIZE) {
+  CHUNKS.push(TEST_DECK.slice(i, i + CHUNK_SIZE));
+}
 
 const el = {
+  pickerView: document.getElementById('picker-view'),
+  versionPicker: document.getElementById('version-picker'),
+  chunkList: document.getElementById('chunk-list'),
+
+  practiceView: document.getElementById('practice-view'),
   version: document.getElementById('version'),
   progress: document.getElementById('progress'),
+  setsBtn: document.getElementById('sets-btn'),
   backBtn: document.getElementById('back-btn'),
   pauseBtn: document.getElementById('pause-btn'),
   timer: document.getElementById('timer'),
@@ -25,9 +38,65 @@ const el = {
   completeOverlay: document.getElementById('complete-overlay'),
   completeBody: document.getElementById('complete-body'),
   restartBtn: document.getElementById('restart-btn'),
+  toSetsBtn: document.getElementById('to-sets-btn'),
 };
 
 el.version.textContent = VERSION;
+el.versionPicker.textContent = VERSION;
+
+let engine = null;
+let chunkIndex = null;
+let history = [];
+let pointer = 0;
+let paused = false;
+let done = false;
+
+function chunkRange(i) {
+  const start = i * CHUNK_SIZE + 1;
+  const end = Math.min(start + CHUNK_SIZE - 1, TEST_DECK.length);
+  return { start, end };
+}
+
+function chunkStatus(i) {
+  const saved = loadChunk(i);
+  if (!saved) return { label: 'Not started', done: false };
+  const total = CHUNKS[i].length;
+  const shown = Math.min(saved.deckPointer, total);
+  const reviewingFlagged = saved.deckPointer >= total;
+  const flaggedCount = saved.flaggedNs.length;
+  if (reviewingFlagged && flaggedCount === 0) return { label: 'Done', done: true };
+  if (reviewingFlagged) return { label: `${total}/${total} · ${flaggedCount} flagged`, done: false };
+  return { label: `${shown}/${total}`, done: false };
+}
+
+function renderPicker() {
+  el.chunkList.innerHTML = '';
+  CHUNKS.forEach((_, i) => {
+    const { start, end } = chunkRange(i);
+    const status = chunkStatus(i);
+    const btn = document.createElement('button');
+    btn.className = 'chunk-btn' + (status.done ? ' chunk-done' : '');
+    btn.innerHTML = `<span class="chunk-name">Set ${i + 1} · ${start}–${end}</span><span class="chunk-status">${status.label}</span>`;
+    btn.addEventListener('click', () => enterChunk(i));
+    el.chunkList.appendChild(btn);
+  });
+}
+
+function showPicker() {
+  renderPicker();
+  el.pickerView.classList.remove('hidden');
+  el.practiceView.classList.add('hidden');
+}
+
+function showPractice() {
+  el.pickerView.classList.add('hidden');
+  el.practiceView.classList.remove('hidden');
+}
+
+function persist() {
+  if (chunkIndex === null) return;
+  saveChunk(chunkIndex, engine.getState());
+}
 
 // Each history entry owns its own reveal state and timer, so stepping back
 // to review an earlier card never disturbs the live one still in progress.
@@ -36,11 +105,6 @@ function newEntry(card) {
   // reflect that immediately so the button doesn't lie about its own state.
   return { card, revealed: false, flagged: !!card.flagged, startTime: Date.now(), revealElapsedMs: null };
 }
-
-let history = [newEntry(engine.draw())];
-let pointer = 0;
-let paused = false;
-let done = false; // deck exhausted and nothing flagged left to review
 
 function entry() {
   return history[pointer];
@@ -91,12 +155,35 @@ function render() {
 }
 
 function tick() {
-  if (paused || done) return;
+  if (paused || done || chunkIndex === null) return;
   const e = entry();
   const ms = e.revealed ? e.revealElapsedMs : Date.now() - e.startTime;
   el.timer.textContent = `${(ms / 1000).toFixed(1)}s`;
 }
 setInterval(tick, 100);
+
+function enterChunk(i) {
+  chunkIndex = i;
+  const saved = loadChunk(i);
+  engine = createEngine(rng, CHUNKS[i], saved || undefined);
+  paused = false;
+
+  const card = engine.draw();
+  persist();
+  if (card === null) {
+    done = true;
+    const p = engine.progress();
+    el.completeBody.textContent = `All ${p.total} sentences in this set are done, and nothing's left flagged to review.`;
+    history = [];
+  } else {
+    done = false;
+    history = [newEntry(card)];
+    pointer = 0;
+  }
+
+  showPractice();
+  render();
+}
 
 el.actionBtn.addEventListener('click', () => {
   if (done) return;
@@ -113,10 +200,11 @@ el.actionBtn.addEventListener('click', () => {
     pointer += 1;
   } else {
     const card = engine.draw();
+    persist();
     if (card === null) {
       done = true;
       const p = engine.progress();
-      el.completeBody.textContent = `All ${p.total} sentences done, and nothing left flagged to review.`;
+      el.completeBody.textContent = `All ${p.total} sentences in this set are done, and nothing's left flagged to review.`;
       render();
       return;
     }
@@ -134,6 +222,7 @@ el.flagBtn.addEventListener('click', () => {
   if (!e.revealed) return;
   e.flagged = !e.flagged;
   engine.setFlag(e.card, e.flagged);
+  persist();
   render();
 });
 
@@ -157,13 +246,12 @@ el.resumeBtn.addEventListener('click', () => {
 });
 
 el.restartBtn.addEventListener('click', () => {
-  engine = createEngine(rng);
-  history = [newEntry(engine.draw())];
-  pointer = 0;
-  paused = false;
-  done = false;
-  render();
+  clearChunk(chunkIndex);
+  enterChunk(chunkIndex);
 });
 
-render();
+el.setsBtn.addEventListener('click', showPicker);
+el.toSetsBtn.addEventListener('click', showPicker);
+
+showPicker();
 tick();

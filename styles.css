@@ -38,6 +38,8 @@ button { font-family: inherit; }
 .topbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  row-gap: 8px;
   justify-content: space-between;
 }
 
@@ -83,6 +85,47 @@ button { font-family: inherit; }
 .icon-btn:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+.picker-intro {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.chunk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chunk-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  background: var(--card-bg);
+  cursor: pointer;
+  text-align: left;
+}
+
+.chunk-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.chunk-status {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.chunk-btn.chunk-done .chunk-status {
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .card {
@@ -237,6 +280,19 @@ button { font-family: inherit; }
 .prompt-card .primary-btn {
   margin-top: 18px;
   width: 100%;
+}
+
+.secondary-btn {
+  margin-top: 10px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
 }
 
 @media (prefers-color-scheme: dark) {
